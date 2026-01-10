@@ -1,0 +1,23 @@
+export type CreateListBody = {
+  name?: string;
+  description?: string;
+};
+
+export type UpdateListBody = {
+  name?: string;
+  description?: string;
+};
+
+export type AddItemsToListBody = {
+  items?: Array<{
+    variantId?: string;
+    quantity?: number;
+    note?: string;
+  }>;
+};
+
+export type UpdateListItemBody = {
+  quantity?: number;
+  note?: string;
+};
+
