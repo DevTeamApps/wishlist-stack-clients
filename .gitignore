@@ -3,6 +3,8 @@
 
 # Compiled files
 dist
+.tmp
+*.tgz
 
 # Dependency directories
 node_modules
