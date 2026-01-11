@@ -3,8 +3,11 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   test: {
     environment: "node",
-    include: ["test/**/*.test.ts"],
-    setupFiles: ["test/setup.ts"],
+    include: ["packages/*/test/**/*.test.{ts,tsx}"],
+    setupFiles: [
+      "packages/client/test/setup.ts",
+      "packages/hydrogen/test/setup.ts"
+    ],
     pool: "threads",
   },
 });

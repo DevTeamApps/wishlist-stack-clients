@@ -1,32 +1,23 @@
 {
-  "name": "wjs-client",
+  "name": "wjs-client-repo",
   "version": "1.0.0",
   "description": "",
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
-    }
-  },
-  "files": [
-    "dist"
+  "private": true,
+  "workspaces": [
+    "packages/*"
   ],
-  "sideEffects": false,
   "scripts": {
-    "build": "tsup",
-    "dev": "tsup --watch",
-    "prepare": "npm run build",
-    "smoke": "npm run build && node examples/smoke.mjs",
-    "verify:pack": "node scripts/verify-pack.mjs",
+    "build": "npm -w @wjs-client/client run build && npm -w @wjs-client/hydrogen run build",
+    "dev": "npm -ws run dev",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "npm -w @wjs-client/client run typecheck && npm -w @wjs-client/hydrogen run typecheck"
   },
   "devDependencies": {
+    "@types/react": "^19.2.8",
+    "@types/react-dom": "^19.2.3",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
     "tsup": "^8.5.1",
     "typescript": "^5.9.3",
     "vitest": "^4.0.16"

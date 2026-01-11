@@ -1,0 +1,62 @@
+{
+  "name": "@wjs-client/hydrogen",
+  "version": "1.0.0",
+  "description": "Hydrogen (react-router) integration for wjs-client",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./server": {
+      "types": "./dist/server.d.ts",
+      "import": "./dist/server.js",
+      "require": "./dist/server.cjs"
+    },
+    "./middleware": {
+      "types": "./dist/middleware.d.ts",
+      "import": "./dist/middleware.js",
+      "require": "./dist/middleware.cjs"
+    },
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "import": "./dist/react.js",
+      "require": "./dist/react.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "dependencies": {
+    "@wjs-client/client": "file:../client"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "react-router": ">=7.0.0",
+    "@shopify/hydrogen": ">=2025.05.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-router": {
+      "optional": true
+    },
+    "@shopify/hydrogen": {
+      "optional": true
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run --root ../..",
+    "test:watch": "vitest --root ../..",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  }
+}
+
