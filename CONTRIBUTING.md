@@ -1,6 +1,6 @@
 # Contributing to wjs-client
 
-Thank you for your interest in contributing to wjs-client! This document outlines the development workflow, release process, and code standards for this monorepo.
+This document outlines the development workflow, release process, and code standards for this monorepo.
 
 ## Table of Contents
 
