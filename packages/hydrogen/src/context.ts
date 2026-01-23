@@ -1,4 +1,4 @@
-import type { WjsClient } from "@wjs-client/client";
+import type { WjsClient } from "@devteam-sdg/wjs-client";
 import type { WjsHydrogenServer } from "./types";
 
 type ContextMapLike = {

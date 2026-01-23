@@ -2,4 +2,4 @@ export type { WjsHydrogenOptions, WjsHydrogenServer, BootstrapClientConfig } fro
 export { createWjsServerContext } from "./server";
 export { createWjsMiddleware } from "./middleware";
 export { getWjs, getWjsClient } from "./context";
-export { WjsApiError, isWjsApiError } from "@wjs-client/client";
+export { WjsApiError, isWjsApiError } from "@devteam-sdg/wjs-client";

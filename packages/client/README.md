@@ -1,17 +1,17 @@
-# @wjs-client/client
+# @devteam-sdg/wjs-client
 
 TypeScript/JavaScript SDK for the Wishlist JS API.
 
 ## Install
 
 ```bash
-npm i @wjs-client/client
+npm i @devteam-sdg/wjs-client
 ```
 
 ## Usage (Node / server / workers)
 
 ```ts
-import {createWjsClient} from '@wjs-client/client';
+import {createWjsClient} from '@devteam-sdg/wjs-client';
 
 const client = createWjsClient({
   apiKey: process.env.WJS_API_KEY!, // merchant key
@@ -26,7 +26,7 @@ const groups = await client.groups.getAll();
 ## Usage (browser)
 
 ```ts
-import {createWjsClient} from '@wjs-client/client';
+import {createWjsClient} from '@devteam-sdg/wjs-client';
 
 const client = createWjsClient({
   apiKey: 'YOUR_API_KEY',
@@ -45,7 +45,7 @@ Note: if you are using a strict Content Security Policy (CSP), you must allow yo
 If you prefer a `new`-style API, use the `WJSClient` class. It wraps `createWjsClient()` and exposes the same resources: `lists`, `groups`, and `shared`.
 
 ```ts
-import {WJSClient} from '@wjs-client/client';
+import {WJSClient} from '@devteam-sdg/wjs-client';
 
 const client = new WJSClient({
   apiKey: process.env.WJS_API_KEY!,       // merchant key
@@ -74,7 +74,7 @@ await client.getLists();            // alias for client.lists.getAll()
 Non-2xx responses throw `WjsApiError`. For UI-friendly handling:
 
 ```ts
-import {isWjsApiError} from '@wjs-client/client';
+import {isWjsApiError} from '@devteam-sdg/wjs-client';
 
 try {
   await client.groups.getAll();

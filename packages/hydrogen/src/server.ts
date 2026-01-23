@@ -1,4 +1,4 @@
-import { createWjsClient, type WjsClient } from "@wjs-client/client";
+import { createWjsClient, type WjsClient } from "@devteam-sdg/wjs-client";
 import type { WjsHydrogenOptions, WjsHydrogenServer } from "./types";
 
 function createLazyWjsClient(getClient: () => Promise<WjsClient>): WjsClient {

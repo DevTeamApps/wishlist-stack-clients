@@ -1,6 +1,6 @@
 {
-  "name": "@wjs-client/client",
-  "version": "1.0.0",
+  "name": "@devteam-sdg/wjs-client",
+  "version": "1.0.1",
   "description": "TypeScript SDK for the Wishlist JS API",
   "type": "module",
   "main": "./dist/index.cjs",

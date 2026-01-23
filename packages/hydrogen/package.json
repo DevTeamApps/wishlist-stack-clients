@@ -1,6 +1,6 @@
 {
-  "name": "@wjs-client/hydrogen",
-  "version": "1.0.0",
+  "name": "@devteam-sdg/wjs-hydrogen",
+  "version": "1.0.1",
   "description": "Hydrogen (react-router) integration for wjs-client",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -33,7 +33,7 @@
   ],
   "sideEffects": false,
   "dependencies": {
-    "@wjs-client/client": "file:../client"
+    "@devteam-sdg/wjs-client": "^1.0.1"
   },
   "peerDependencies": {
     "react": ">=18",
