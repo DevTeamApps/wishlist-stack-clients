@@ -1,0 +1,14 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@3.1.2/schema.json",
+  "changelog": [
+    "@changesets/changelog-github",
+    { "repo": "devteam-sdg/wjs-client" }
+  ],
+  "commit": false,
+  "fixed": [["@devteam-sdg/wjs-client", "@devteam-sdg/wjs-hydrogen"]],
+  "linked": [],
+  "access": "public",
+  "baseBranch": "main",
+  "updateInternalDependencies": "patch",
+  "ignore": []
+}
