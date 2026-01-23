@@ -230,6 +230,3 @@ docs: update installation instructions
 refactor: simplify error handling in client
 ```
 
-## Questions?
-
-If you have questions about the contribution process, feel free to open an issue for discussion.
