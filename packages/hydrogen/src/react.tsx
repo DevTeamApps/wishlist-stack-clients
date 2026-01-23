@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from "react";
-import { createWjsClient, type WjsClient } from "@wjs-client/client";
+import { createWjsClient, type WjsClient } from "@devteam-sdg/wjs-client";
 import type { BootstrapClientConfig } from "./types";
 
 export type WjsProviderMode = "proxy" | "direct";

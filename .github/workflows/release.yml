@@ -1,0 +1,87 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+
+    # Required for npm trusted publishing (OIDC)
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+
+    # Skip if commit is from changesets (avoid infinite loop)
+    if: github.actor != 'github-actions[bot]'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Fetch all history for proper versioning
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Create Release Pull Request or Publish
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          # This command runs when there are changesets to consume
+          # It bumps versions and updates changelogs
+          version: npx changeset version
+          # This command runs when the Version PR is merged
+          # It publishes packages to npm
+          publish: npx changeset publish
+          title: "Version Packages"
+          commit: "chore: version packages"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # No NPM_TOKEN needed - using OIDC trusted publishing
+
+      - name: Create GitHub Release
+        if: steps.changesets.outputs.published == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const publishedPackages = ${{ steps.changesets.outputs.publishedPackages }};
+            
+            if (publishedPackages && publishedPackages.length > 0) {
+              // Use the first package's version for the release tag (they're all the same with fixed versioning)
+              const version = publishedPackages[0].version;
+              const tagName = `v${version}`;
+              
+              // Build release notes from published packages
+              const packageList = publishedPackages
+                .map(pkg => `- ${pkg.name}@${pkg.version}`)
+                .join('\n');
+              
+              await github.rest.repos.createRelease({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag_name: tagName,
+                name: tagName,
+                body: `## Published Packages\n\n${packageList}\n\nSee the [CHANGELOG](./packages/client/CHANGELOG.md) for details.`,
+                draft: false,
+                prerelease: false
+              });
+            }

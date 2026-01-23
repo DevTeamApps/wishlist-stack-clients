@@ -16,7 +16,7 @@ export type BootstrapClientConfig = {
 
 export type WjsHydrogenServer = {
   getCustomerAccessToken(): Promise<string | undefined>;
-  getClient(): Promise<import("@wjs-client/client").WjsClient>;
+  getClient(): Promise<import("@devteam-sdg/wjs-client").WjsClient>;
   bootstrapClientConfig(opts?: { exposeCustomerAccessToken?: boolean }): Promise<BootstrapClientConfig>;
 };
 
@@ -31,7 +31,7 @@ declare global {
      *
      * Usage: `await context.wjsClient.groups.getAll()`
      */
-    wjsClient: import("@wjs-client/client").WjsClient;
+    wjsClient: import("@devteam-sdg/wjs-client").WjsClient;
   }
 }
 

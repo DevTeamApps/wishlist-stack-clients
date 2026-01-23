@@ -1,8 +1,8 @@
 # Wishlist JS SDKs (monorepo)
 
 This repo contains:
-- `packages/client` → `@wjs-client/client` (**core JS/TS SDK**)
-- `packages/hydrogen` → `@wjs-client/hydrogen` (**Hydrogen (react-router) integration**)
+- `packages/client` → `@devteam-sdg/wjs-client` (**core JS/TS SDK**)
+- `packages/hydrogen` → `@devteam-sdg/wjs-hydrogen` (**Hydrogen (react-router) integration**)
 
 ## Quick links
 - Core SDK docs: [`packages/client/`](./packages/client/)

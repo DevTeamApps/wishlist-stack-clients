@@ -1,6 +1,6 @@
-# @wjs-client/hydrogen
+# @devteam-sdg/wjs-hydrogen
 
-Hydrogen (react-router) integration for [`@wjs-client/client`](../client/).
+Hydrogen (react-router) integration for [`@devteam-sdg/wjs-client`](../client/).
 
 This package supports **two server wiring styles**:
 - **Context creation**: attach to your Hydrogen load context (`getLoadContext`).
@@ -8,12 +8,12 @@ This package supports **two server wiring styles**:
 
 It also provides:
 - **Context helpers** (`getWjsClient`, `getWjs`) to avoid `context.get(...)` boilerplate
-- **React Provider + hooks** for client-side usage (`@wjs-client/hydrogen/react`)
+- **React Provider + hooks** for client-side usage (`@devteam-sdg/wjs-hydrogen/react`)
 
 ## Install
 
 ```bash
-npm i @wjs-client/client @wjs-client/hydrogen
+npm i @devteam-sdg/wjs-client @devteam-sdg/wjs-hydrogen
 ```
 
 ## 1) Server usage (attach to Hydrogen load context)
@@ -23,7 +23,7 @@ Use `createWjsServerContext()` to attach:
 - `context.wjsClient` (ready-to-use client, lazy + request-scoped)
 
 ```ts
-import {createWjsServerContext} from '@wjs-client/hydrogen/server';
+import {createWjsServerContext} from '@devteam-sdg/wjs-hydrogen/server';
 
 export function getLoadContext(hydrogenContext: unknown) {
   createWjsServerContext({
@@ -48,7 +48,7 @@ export async function loader({context}: any) {
 Some Hydrogen/React Router setups expose a `context.get(...)` API. To avoid conditional access, use helpers:
 
 ```ts
-import {getWjsClient} from '@wjs-client/hydrogen';
+import {getWjsClient} from '@devteam-sdg/wjs-hydrogen';
 
 export async function loader({context}: any) {
   const client = await getWjsClient(context);
@@ -61,7 +61,7 @@ export async function loader({context}: any) {
 Register middleware and it will attach `wjs` to the middleware context.
 
 ```ts
-import {createWjsMiddleware} from '@wjs-client/hydrogen/middleware';
+import {createWjsMiddleware} from '@devteam-sdg/wjs-hydrogen/middleware';
 
 export const middleware = [
   createWjsMiddleware({
@@ -75,10 +75,10 @@ The middleware supports both `context.set(...)` (context map style) and plain ob
 
 ## 3) Client usage (React Provider + hooks)
 
-Import from `@wjs-client/hydrogen/react`:
+Import from `@devteam-sdg/wjs-hydrogen/react`:
 
 ```tsx
-import {WjsProvider, useWjsClient} from '@wjs-client/hydrogen/react';
+import {WjsProvider, useWjsClient} from '@devteam-sdg/wjs-hydrogen/react';
 ```
 
 ### Direct-from-browser (opt-in)
@@ -94,7 +94,7 @@ export async function loader({context}: any) {
 ```
 
 ```tsx
-import {WjsProvider} from '@wjs-client/hydrogen/react';
+import {WjsProvider} from '@devteam-sdg/wjs-hydrogen/react';
 import {useLoaderData} from 'react-router';
 
 export function App() {
@@ -114,7 +114,7 @@ export function App() {
 Then, anywhere in your app:
 
 ```ts
-import {useWjsClient} from '@wjs-client/hydrogen/react';
+import {useWjsClient} from '@devteam-sdg/wjs-hydrogen/react';
 
 export function MyComponent() {
   const client = useWjsClient();
@@ -126,7 +126,7 @@ export function MyComponent() {
 ### Optional global state (for “wishlisted?” checks)
 
 ```ts
-import {useWjs} from '@wjs-client/hydrogen/react';
+import {useWjs} from '@devteam-sdg/wjs-hydrogen/react';
 
 export function ProductCard({variantId}: {variantId: string}) {
   const {state} = useWjs();

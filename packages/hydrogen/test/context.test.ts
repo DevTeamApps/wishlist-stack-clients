@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { WjsClient } from "@wjs-client/client";
+import type { WjsClient } from "@devteam-sdg/wjs-client";
 import { getWjsClient } from "../src/context";
 
 describe("getWjsClient", () => {
