@@ -32,7 +32,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"  # Needed for npm@11 for Trusted Publishing
           cache: "npm"
           registry-url: "https://registry.npmjs.org"
 
@@ -42,21 +42,23 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Test OIDC Token
+        run: |
+          TOKEN=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=npm" | jq -r '.value')
+          [ -n "$TOKEN" ] && echo "✅ OIDC working" || exit 1
+
       - name: Create Release Pull Request or Publish
         id: changesets
         uses: changesets/action@v1
         with:
-          # This command runs when there are changesets to consume
-          # It bumps versions and updates changelogs
           version: npx changeset version
-          # This command runs when the Version PR is merged
-          # It publishes packages to npm
           publish: npx changeset publish
           title: "Version Packages"
           commit: "chore: version packages"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # No NPM_TOKEN needed - using OIDC trusted publishing
+          NPM_TOKEN: ''  # Empty string forces OIDC authentication
 
       - name: Create GitHub Release
         if: steps.changesets.outputs.published == 'true'
