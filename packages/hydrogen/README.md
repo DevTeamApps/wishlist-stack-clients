@@ -1,34 +1,34 @@
-# @devteam-sdg/wjs-hydrogen
+# @sdg.la/wishlist-stack-hydrogen
 
-Hydrogen (react-router) integration for [`@devteam-sdg/wjs-client`](../client/).
+Hydrogen (react-router) integration for [`@sdg.la/wishlist-stack-sdk`](../client/).
 
 This package supports **two server wiring styles**:
 - **Context creation**: attach to your Hydrogen load context (`getLoadContext`).
 - **Middleware-enabled**: attach via React Router middleware (when used).
 
 It also provides:
-- **Context helpers** (`getWjsClient`, `getWjs`) to avoid `context.get(...)` boilerplate
-- **React Provider + hooks** for client-side usage (`@devteam-sdg/wjs-hydrogen/react`)
+- **Context helpers** (`getWishlistStackClient`, `getWishlistStack`) to avoid `context.get(...)` boilerplate
+- **React Provider + hooks** for client-side usage (`@sdg.la/wishlist-stack-hydrogen/react`)
 
 ## Install
 
 ```bash
-npm i @devteam-sdg/wjs-client @devteam-sdg/wjs-hydrogen
+npm i @sdg.la/wishlist-stack-sdk @sdg.la/wishlist-stack-hydrogen
 ```
 
 ## 1) Server usage (attach to Hydrogen load context)
 
-Use `createWjsServerContext()` to attach:
-- `context.wjs` (server helper)
-- `context.wjsClient` (ready-to-use client, lazy + request-scoped)
+Use `createWishlistStackServerContext()` to attach:
+- `context.wishlistStack` (server helper)
+- `context.wishlistStackClient` (ready-to-use client, lazy + request-scoped)
 
 ```ts
-import {createWjsServerContext} from '@devteam-sdg/wjs-hydrogen/server';
+import {createWishlistStackServerContext} from '@sdg.la/wishlist-stack-hydrogen/server';
 
 export function getLoadContext(hydrogenContext: unknown) {
-  createWjsServerContext({
-    apiKey: process.env.WJS_API_KEY!, // merchant key
-    baseUrl: process.env.WJS_BASE_URL,
+  createWishlistStackServerContext({
+    apiKey: process.env.WISHLIST_STACK_API_KEY!, // merchant key
+    baseUrl: process.env.WISHLIST_STACK_BASE_URL,
   })(hydrogenContext);
 
   return hydrogenContext;
@@ -39,7 +39,7 @@ Now in loaders/actions you can do:
 
 ```ts
 export async function loader({context}: any) {
-  return await context.wjsClient.groups.getAll();
+  return await context.wishlistStackClient.groups.getAll();
 }
 ```
 
@@ -48,25 +48,25 @@ export async function loader({context}: any) {
 Some Hydrogen/React Router setups expose a `context.get(...)` API. To avoid conditional access, use helpers:
 
 ```ts
-import {getWjsClient} from '@devteam-sdg/wjs-hydrogen';
+import {getWishlistStackClient} from '@sdg.la/wishlist-stack-hydrogen';
 
 export async function loader({context}: any) {
-  const client = await getWjsClient(context);
+  const client = await getWishlistStackClient(context);
   return await client.groups.getAll();
 }
 ```
 
 ## 2) Server usage (middleware-enabled)
 
-Register middleware and it will attach `wjs` to the middleware context.
+Register middleware and it will attach `wishlistStack` to the middleware context.
 
 ```ts
-import {createWjsMiddleware} from '@devteam-sdg/wjs-hydrogen/middleware';
+import {createWishlistStackMiddleware} from '@sdg.la/wishlist-stack-hydrogen/middleware';
 
 export const middleware = [
-  createWjsMiddleware({
-    apiKey: process.env.WJS_API_KEY!,
-    baseUrl: process.env.WJS_BASE_URL,
+  createWishlistStackMiddleware({
+    apiKey: process.env.WISHLIST_STACK_API_KEY!,
+    baseUrl: process.env.WISHLIST_STACK_BASE_URL,
   }),
 ];
 ```
@@ -75,10 +75,10 @@ The middleware supports both `context.set(...)` (context map style) and plain ob
 
 ## 3) Client usage (React Provider + hooks)
 
-Import from `@devteam-sdg/wjs-hydrogen/react`:
+Import from `@sdg.la/wishlist-stack-hydrogen/react`:
 
 ```tsx
-import {WjsProvider, useWjsClient} from '@devteam-sdg/wjs-hydrogen/react';
+import {WishlistStackProvider, useWishlistStackClient} from '@sdg.la/wishlist-stack-hydrogen/react';
 ```
 
 ### Direct-from-browser (opt-in)
@@ -88,25 +88,25 @@ If you want client components to call the API directly, bootstrap config (and op
 ```ts
 // root loader
 export async function loader({context}: any) {
-  const cfg = await context.wjs.bootstrapClientConfig({exposeCustomerAccessToken: true});
-  return {wjs: cfg};
+  const cfg = await context.wishlistStack.bootstrapClientConfig({exposeCustomerAccessToken: true});
+  return {wishlistStack: cfg};
 }
 ```
 
 ```tsx
-import {WjsProvider} from '@devteam-sdg/wjs-hydrogen/react';
+import {WishlistStackProvider} from '@sdg.la/wishlist-stack-hydrogen/react';
 import {useLoaderData} from 'react-router';
 
 export function App() {
   const data = useLoaderData() as any;
   return (
-    <WjsProvider
+    <WishlistStackProvider
       mode="direct"
-      config={{apiKey: data.wjs.apiKey, baseUrl: data.wjs.baseUrl}}
-      initialCustomerAccessToken={data.wjs.customerAccessToken}
+      config={{apiKey: data.wishlistStack.apiKey, baseUrl: data.wishlistStack.baseUrl}}
+      initialCustomerAccessToken={data.wishlistStack.customerAccessToken}
     >
       {/* ... */}
-    </WjsProvider>
+    </WishlistStackProvider>
   );
 }
 ```
@@ -114,27 +114,26 @@ export function App() {
 Then, anywhere in your app:
 
 ```ts
-import {useWjsClient} from '@devteam-sdg/wjs-hydrogen/react';
+import {useWishlistStackClient} from '@sdg.la/wishlist-stack-hydrogen/react';
 
 export function MyComponent() {
-  const client = useWjsClient();
+  const client = useWishlistStackClient();
   // await client.groups.getAll()
   return null;
 }
 ```
 
-### Optional global state (for “wishlisted?” checks)
+### Optional global state (for "wishlisted?" checks)
 
 ```ts
-import {useWjs} from '@devteam-sdg/wjs-hydrogen/react';
+import {useWishlistStack} from '@sdg.la/wishlist-stack-hydrogen/react';
 
 export function ProductCard({variantId}: {variantId: string}) {
-  const {state} = useWjs();
+  const {state} = useWishlistStack();
   const saved = state.savedVariantIds?.includes(variantId) ?? false;
-  // render “saved” UI
+  // render "saved" UI
   return null;
 }
 ```
 
-You can hydrate `initialState` in your root route loader and pass it to `<WjsProvider initialState={...} />` when you add an endpoint for it.
-
+You can hydrate `initialState` in your root route loader and pass it to `<WishlistStackProvider initialState={...} />` when you add an endpoint for it.

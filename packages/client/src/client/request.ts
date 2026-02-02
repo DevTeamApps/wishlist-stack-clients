@@ -1,5 +1,5 @@
 import { toQueryString, type Query } from "./query";
-import { WjsApiError } from "./errors";
+import { WishlistStackApiError } from "./errors";
 import type { ApiErrorResponse } from "../types/common";
 
 export type FetchLike = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
@@ -41,14 +41,14 @@ export function createRequest(ctx: RequestContext) {
     const url = `${ctx.baseUrl}${args.path}${toQueryString(args.query)}`;
 
     const headers: Record<string, string> = {
-      "X-WJS-Api-Key": ctx.apiKey,
+      "X-Wishlist-Stack-Api-Key": ctx.apiKey,
       ...(args.headers ?? {}),
     };
 
     if (args.auth === "authenticated") {
       const token = ctx.customerAccessToken;
       // If token is missing, still perform the request and let the API return the appropriate
-      // error response (which we will surface as a WjsApiError based on the HTTP response).
+      // error response (which we will surface as a WishlistStackApiError based on the HTTP response).
       if (token) headers["X-Shopify-Customer-Access-Token"] = token;
     }
 
@@ -86,7 +86,7 @@ export function createRequest(ctx: RequestContext) {
         res.headers.get("fly-request-id") ??
         res.headers.get("x-request-id") ??
         undefined;
-      throw new WjsApiError<ApiErrorResponse | unknown>(`WJS API request failed (${res.status})`, {
+      throw new WishlistStackApiError<ApiErrorResponse | unknown>(`Wishlist Stack API request failed (${res.status})`, {
         status: res.status,
         url,
         method: args.method,

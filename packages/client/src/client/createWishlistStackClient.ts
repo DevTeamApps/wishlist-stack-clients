@@ -4,23 +4,23 @@ import { createListsResource } from "../resources/lists";
 import { createGroupsResource } from "../resources/groups";
 import { createSharedResource } from "../resources/shared";
 
-export type CreateWjsClientOptions = {
+export type CreateWishlistStackClientOptions = {
   baseUrl?: string;
   apiKey: string;
   customerAccessToken?: string;
   fetch?: FetchLike;
 };
 
-export type WjsClient = {
+export type WishlistStackClient = {
   lists: ReturnType<typeof createListsResource>;
   groups: ReturnType<typeof createGroupsResource>;
   shared: ReturnType<typeof createSharedResource>;
 };
 
-export function createWjsClient(opts: CreateWjsClientOptions): WjsClient {
+export function createWishlistStackClient(opts: CreateWishlistStackClientOptions): WishlistStackClient {
   if (!opts.apiKey) {
     throw new Error(
-      "merchant api key is required. Pass it to createWjsClient({ apiKey })",
+      "merchant api key is required. Pass it to createWishlistStackClient({ apiKey })",
     );
   }
 
@@ -35,7 +35,7 @@ export function createWjsClient(opts: CreateWjsClientOptions): WjsClient {
 
   if (!fetchImpl) {
     throw new Error(
-      "No fetch implementation found. Provide one via createWjsClient({ fetch }) or use Node 18+ / modern browsers.",
+      "No fetch implementation found. Provide one via createWishlistStackClient({ fetch }) or use Node 18+ / modern browsers.",
     );
   }
 
@@ -52,4 +52,3 @@ export function createWjsClient(opts: CreateWjsClientOptions): WjsClient {
     shared: createSharedResource(request),
   };
 }
-

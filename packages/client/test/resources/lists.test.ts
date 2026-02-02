@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { createWjsClient } from "../../src/client/createWjsClient";
+import { createWishlistStackClient } from "../../src/client/createWishlistStackClient";
 import { createMockFetch } from "../helpers/mockFetch";
 
 describe("lists resource", () => {
   it("supports pagination query params for lists.getById() (paginate items under list)", async () => {
     const mock = createMockFetch();
-    const client = createWjsClient({
+    const client = createWishlistStackClient({
       baseUrl: "https://example.test",
       apiKey: "k",
       customerAccessToken: "t",

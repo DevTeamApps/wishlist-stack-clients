@@ -1,19 +1,19 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from "react";
-import { createWjsClient, type WjsClient } from "@devteam-sdg/wjs-client";
+import { createWishlistStackClient, type WishlistStackClient } from "@sdg.la/wishlist-stack-sdk";
 import type { BootstrapClientConfig } from "./types";
 
-export type WjsProviderMode = "proxy" | "direct";
+export type WishlistStackProviderMode = "proxy" | "direct";
 
 /**
- * Lightweight client-side state for convenience features (e.g. “is this variant wishlisted?”).
+ * Lightweight client-side state for convenience features (e.g. "is this variant wishlisted?").
  * Intentionally minimal and extendable.
  */
-export type WjsGlobalState = {
+export type WishlistStackGlobalState = {
   savedVariantIds?: string[];
   savedProductIds?: string[];
 };
 
-export type WjsProviderProps = {
+export type WishlistStackProviderProps = {
   children: React.ReactNode;
   config: Pick<BootstrapClientConfig, "apiKey" | "baseUrl">;
   /**
@@ -21,30 +21,30 @@ export type WjsProviderProps = {
    * In proxy mode, authenticated requests should be done server-side.
    */
   initialCustomerAccessToken?: string;
-  mode?: WjsProviderMode;
+  mode?: WishlistStackProviderMode;
   /**
    * Optional, app-managed global state (can be hydrated from a loader).
-   * You can update it via `useWjs().setState(...)`.
+   * You can update it via `useWishlistStack().setState(...)`.
    */
-  initialState?: WjsGlobalState;
+  initialState?: WishlistStackGlobalState;
 };
 
-type WjsProviderValue = {
-  client: WjsClient;
-  mode: WjsProviderMode;
-  state: WjsGlobalState;
-  setState: (next: WjsGlobalState | ((prev: WjsGlobalState) => WjsGlobalState)) => void;
+type WishlistStackProviderValue = {
+  client: WishlistStackClient;
+  mode: WishlistStackProviderMode;
+  state: WishlistStackGlobalState;
+  setState: (next: WishlistStackGlobalState | ((prev: WishlistStackGlobalState) => WishlistStackGlobalState)) => void;
 };
 
-const WjsContext = createContext<WjsProviderValue | null>(null);
+const WishlistStackContext = createContext<WishlistStackProviderValue | null>(null);
 
-export function WjsProvider(props: WjsProviderProps) {
-  const mode: WjsProviderMode = props.mode ?? "proxy";
+export function WishlistStackProvider(props: WishlistStackProviderProps) {
+  const mode: WishlistStackProviderMode = props.mode ?? "proxy";
 
-  const [state, setState] = useState<WjsGlobalState>(props.initialState ?? {});
+  const [state, setState] = useState<WishlistStackGlobalState>(props.initialState ?? {});
 
   const client = useMemo(() => {
-    return createWjsClient({
+    return createWishlistStackClient({
       apiKey: props.config.apiKey,
       baseUrl: props.config.baseUrl,
       customerAccessToken: mode === "direct" ? props.initialCustomerAccessToken : undefined,
@@ -52,7 +52,7 @@ export function WjsProvider(props: WjsProviderProps) {
   }, [props.config.apiKey, props.config.baseUrl, props.initialCustomerAccessToken, mode]);
 
   const setStateStable = useCallback(
-    (next: WjsGlobalState | ((prev: WjsGlobalState) => WjsGlobalState)) => setState(next as any),
+    (next: WishlistStackGlobalState | ((prev: WishlistStackGlobalState) => WishlistStackGlobalState)) => setState(next as any),
     [],
   );
 
@@ -61,18 +61,17 @@ export function WjsProvider(props: WjsProviderProps) {
     [client, mode, state, setStateStable],
   );
 
-  return <WjsContext.Provider value={value}>{props.children}</WjsContext.Provider>;
+  return <WishlistStackContext.Provider value={value}>{props.children}</WishlistStackContext.Provider>;
 }
 
-export function useWjs(): WjsProviderValue {
-  const ctx = useContext(WjsContext);
+export function useWishlistStack(): WishlistStackProviderValue {
+  const ctx = useContext(WishlistStackContext);
   if (!ctx) {
-    throw new Error("useWjs must be used within <WjsProvider>.");
+    throw new Error("useWishlistStack must be used within <WishlistStackProvider>.");
   }
   return ctx;
 }
 
-export function useWjsClient(): WjsClient {
-  return useWjs().client;
+export function useWishlistStackClient(): WishlistStackClient {
+  return useWishlistStack().client;
 }
-

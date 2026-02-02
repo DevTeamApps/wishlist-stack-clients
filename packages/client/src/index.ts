@@ -1,8 +1,8 @@
-export { createWjsClient } from "./client/createWjsClient";
-export type { CreateWjsClientOptions, WjsClient } from "./client/createWjsClient";
+export { createWishlistStackClient } from "./client/createWishlistStackClient";
+export type { CreateWishlistStackClientOptions, WishlistStackClient } from "./client/createWishlistStackClient";
 
-export { WJSClient } from "./WJSClient";
-export { WjsApiError, isWjsApiError } from "./client/errors";
+export { WishlistStackClient as WishlistStackSDK } from "./WishlistStackClient";
+export { WishlistStackApiError, isWishlistStackApiError } from "./client/errors";
 
 export * from "./types";
 

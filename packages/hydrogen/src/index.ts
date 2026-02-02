@@ -1,5 +1,5 @@
-export type { WjsHydrogenOptions, WjsHydrogenServer, BootstrapClientConfig } from "./types";
-export { createWjsServerContext } from "./server";
-export { createWjsMiddleware } from "./middleware";
-export { getWjs, getWjsClient } from "./context";
-export { WjsApiError, isWjsApiError } from "@devteam-sdg/wjs-client";
+export type { WishlistStackHydrogenOptions, WishlistStackHydrogenServer, BootstrapClientConfig } from "./types";
+export { createWishlistStackServerContext } from "./server";
+export { createWishlistStackMiddleware } from "./middleware";
+export { getWishlistStack, getWishlistStackClient } from "./context";
+export { WishlistStackApiError, isWishlistStackApiError } from "@sdg.la/wishlist-stack-sdk";

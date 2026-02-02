@@ -1,10 +1,10 @@
-import type { WjsClient } from "@devteam-sdg/wjs-client";
-import type { WjsHydrogenServer } from "./types";
+import type { WishlistStackClient } from "@sdg.la/wishlist-stack-sdk";
+import type { WishlistStackHydrogenServer } from "./types";
 
 type ContextMapLike = {
   get?: (key: string) => unknown;
-  wjs?: WjsHydrogenServer;
-  wjsClient?: WjsClient;
+  wishlistStack?: WishlistStackHydrogenServer;
+  wishlistStackClient?: WishlistStackClient;
 };
 
 async function maybeAwait<T>(value: T | Promise<T>): Promise<T> {
@@ -12,43 +12,43 @@ async function maybeAwait<T>(value: T | Promise<T>): Promise<T> {
 }
 
 /**
- * Retrieve `wjsClient` from a Hydrogen/React Router loader context.
+ * Retrieve `wishlistStackClient` from a Hydrogen/React Router loader context.
  *
  * Supports both styles:
- * - plain object: `context.wjsClient`
- * - context map: `context.get('wjsClient')`
+ * - plain object: `context.wishlistStackClient`
+ * - context map: `context.get('wishlistStackClient')`
  */
-export async function getWjsClient(context: unknown): Promise<WjsClient> {
+export async function getWishlistStackClient(context: unknown): Promise<WishlistStackClient> {
   const ctx = context as ContextMapLike | null | undefined;
-  if (!ctx) throw new Error("Missing loader context (expected context.wjsClient).");
+  if (!ctx) throw new Error("Missing loader context (expected context.wishlistStackClient).");
 
-  if (ctx.wjsClient) return ctx.wjsClient;
+  if (ctx.wishlistStackClient) return ctx.wishlistStackClient;
   if (typeof ctx.get === "function") {
-    const val = await maybeAwait(ctx.get("wjsClient") as any);
-    if (val) return val as WjsClient;
+    const val = await maybeAwait(ctx.get("wishlistStackClient") as any);
+    if (val) return val as WishlistStackClient;
   }
 
   throw new Error(
-    "WJS client not found on loader context. Ensure you called createWjsServerContext(...)(context) in your server/app load context.",
+    "Wishlist Stack client not found on loader context. Ensure you called createWishlistStackServerContext(...)(context) in your server/app load context.",
   );
 }
 
 /**
- * Retrieve the server helper (`wjs`) from a Hydrogen/React Router loader context.
- * (Useful for bootstrap/token helpers; most route code should just use `wjsClient`.)
+ * Retrieve the server helper (`wishlistStack`) from a Hydrogen/React Router loader context.
+ * (Useful for bootstrap/token helpers; most route code should just use `wishlistStackClient`.)
  */
-export async function getWjs(context: unknown): Promise<WjsHydrogenServer> {
+export async function getWishlistStack(context: unknown): Promise<WishlistStackHydrogenServer> {
   const ctx = context as ContextMapLike | null | undefined;
-  if (!ctx) throw new Error("Missing loader context (expected context.wjs).");
+  if (!ctx) throw new Error("Missing loader context (expected context.wishlistStack).");
 
-  if (ctx.wjs) return ctx.wjs;
+  if (ctx.wishlistStack) return ctx.wishlistStack;
   if (typeof ctx.get === "function") {
-    const val = await maybeAwait(ctx.get("wjs") as any);
-    if (val) return val as WjsHydrogenServer;
+    const val = await maybeAwait(ctx.get("wishlistStack") as any);
+    if (val) return val as WishlistStackHydrogenServer;
   }
 
   throw new Error(
-    "WJS helper not found on loader context. Ensure you called createWjsServerContext(...)(context) in your server/app load context.",
+    "Wishlist Stack helper not found on loader context. Ensure you called createWishlistStackServerContext(...)(context) in your server/app load context.",
   );
 }
 

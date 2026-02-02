@@ -1,4 +1,4 @@
-# Contributing to wjs-client
+# Contributing to wishlist-stack-clients
 
 This document outlines the development workflow, release process, and code standards for this monorepo.
 
@@ -22,8 +22,8 @@ This document outlines the development workflow, release process, and code stand
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/YOUR_ORG/wjs-client.git
-   cd wjs-client
+   git clone https://github.com/DevTeamApps/wishlist-stack-clients.git
+   cd wishlist-stack-clients
    ```
 
 2. Install dependencies:
@@ -50,8 +50,8 @@ This is a monorepo containing two packages:
 
 | Package | Path | Description |
 |---------|------|-------------|
-| `@devteam-sdg/wjs-client` | `packages/client` | Core TypeScript SDK for the Wishlist JS API |
-| `@devteam-sdg/wjs-hydrogen` | `packages/hydrogen` | Hydrogen/React Router integration |
+| `@sdg.la/wishlist-stack-sdk` | `packages/client` | Core TypeScript SDK for the Wishlist Stack API |
+| `@sdg.la/wishlist-stack-hydrogen` | `packages/hydrogen` | Hydrogen/React Router integration |
 
 ## Making Changes
 
@@ -118,7 +118,7 @@ This creates a file in `.changeset/` like `warm-pandas-dance.md`:
 
 ```markdown
 ---
-"@devteam-sdg/wjs-client": patch
+"@sdg.la/wishlist-stack-sdk": patch
 ---
 
 Fixed edge case in query builder when filters are empty
@@ -229,4 +229,3 @@ fix: handle empty response in query builder
 docs: update installation instructions
 refactor: simplify error handling in client
 ```
-

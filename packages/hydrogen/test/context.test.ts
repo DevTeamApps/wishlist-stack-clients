@@ -1,24 +1,23 @@
 import { describe, expect, it } from "vitest";
-import type { WjsClient } from "@devteam-sdg/wjs-client";
-import { getWjsClient } from "../src/context";
+import type { WishlistStackClient } from "@sdg.la/wishlist-stack-sdk";
+import { getWishlistStackClient } from "../src/context";
 
-describe("getWjsClient", () => {
-  it("reads wjsClient from plain object context", async () => {
-    const wjsClient = {} as WjsClient;
-    const ctx: any = { wjsClient };
+describe("getWishlistStackClient", () => {
+  it("reads wishlistStackClient from plain object context", async () => {
+    const wishlistStackClient = {} as WishlistStackClient;
+    const ctx: any = { wishlistStackClient };
 
-    await expect(getWjsClient(ctx)).resolves.toBe(wjsClient);
+    await expect(getWishlistStackClient(ctx)).resolves.toBe(wishlistStackClient);
   });
 
-  it("reads wjsClient from context.get('wjsClient')", async () => {
-    const wjsClient = {} as WjsClient;
+  it("reads wishlistStackClient from context.get('wishlistStackClient')", async () => {
+    const wishlistStackClient = {} as WishlistStackClient;
     const ctx: any = {
       get(key: string) {
-        return key === "wjsClient" ? wjsClient : undefined;
+        return key === "wishlistStackClient" ? wishlistStackClient : undefined;
       },
     };
 
-    await expect(getWjsClient(ctx)).resolves.toBe(wjsClient);
+    await expect(getWishlistStackClient(ctx)).resolves.toBe(wishlistStackClient);
   });
 });
-
