@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { createWjsClient } from "../../src/client/createWjsClient";
+import { createWishlistStackClient } from "../../src/client/createWishlistStackClient";
 import { createMockFetch } from "../helpers/mockFetch";
 
 describe("shared resource", () => {
   it("calls shared endpoints without requiring customerAccessToken", async () => {
     const mock = createMockFetch();
-    const client = createWjsClient({
+    const client = createWishlistStackClient({
       baseUrl: "https://example.test",
       apiKey: "k",
       fetch: mock.fetch,
@@ -18,7 +18,7 @@ describe("shared resource", () => {
     expect(call.init?.method).toBe("GET");
 
     const headers = new Headers(call.init?.headers as HeadersInit);
-    expect(headers.get("X-WJS-Api-Key")).toBe("k");
+    expect(headers.get("X-Wishlist-Stack-Api-Key")).toBe("k");
     expect(headers.get("X-Shopify-Customer-Access-Token")).toBeNull();
   });
 });

@@ -1,20 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { createWjsMiddleware } from "../src/middleware";
+import { createWishlistStackMiddleware } from "../src/middleware";
 
-describe("createWjsMiddleware", () => {
-  it("attaches wjs and wjsClient to a plain object context", async () => {
+describe("createWishlistStackMiddleware", () => {
+  it("attaches wishlistStack and wishlistStackClient to a plain object context", async () => {
     const ctx: any = {};
-    const middleware = createWjsMiddleware({ apiKey: "k", baseUrl: "https://example.test" });
+    const middleware = createWishlistStackMiddleware({ apiKey: "k", baseUrl: "https://example.test" });
 
     const res = await middleware({ request: new Request("https://app.test"), context: ctx }, () => {
       return new Response("ok");
     });
 
     expect(res).toBeInstanceOf(Response);
-    expect(ctx.wjs).toBeTruthy();
-    expect(typeof ctx.wjs.getClient).toBe("function");
-    expect(ctx.wjsClient).toBeTruthy();
-    expect(typeof ctx.wjsClient.groups?.getAll).toBe("function");
+    expect(ctx.wishlistStack).toBeTruthy();
+    expect(typeof ctx.wishlistStack.getClient).toBe("function");
+    expect(ctx.wishlistStackClient).toBeTruthy();
+    expect(typeof ctx.wishlistStackClient.groups?.getAll).toBe("function");
   });
 
   it("uses context.set when available (context map style)", async () => {
@@ -25,11 +25,10 @@ describe("createWjsMiddleware", () => {
       },
     };
 
-    const middleware = createWjsMiddleware({ apiKey: "k" });
+    const middleware = createWishlistStackMiddleware({ apiKey: "k" });
     await middleware({ request: new Request("https://app.test"), context: ctx }, () => new Response("ok"));
 
-    expect(entries.has("wjs")).toBe(true);
-    expect(entries.has("wjsClient")).toBe(true);
+    expect(entries.has("wishlistStack")).toBe(true);
+    expect(entries.has("wishlistStackClient")).toBe(true);
   });
 });
-

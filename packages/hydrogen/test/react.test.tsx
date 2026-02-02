@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import { renderToString } from "react-dom/server";
-import { WjsProvider, useWjsClient } from "../src/react";
+import { WishlistStackProvider, useWishlistStackClient } from "../src/react";
 
 function UsesClient() {
-  const client = useWjsClient();
+  const client = useWishlistStackClient();
   // basic smoke: we have the expected namespaces
   expect(typeof client.groups.getAll).toBe("function");
   expect(typeof client.lists.getAll).toBe("function");
@@ -11,17 +11,16 @@ function UsesClient() {
   return null;
 }
 
-describe("WjsProvider/useWjsClient", () => {
+describe("WishlistStackProvider/useWishlistStackClient", () => {
   it("provides a client instance (proxy mode default)", () => {
     const fetchMock = vi.fn(async () => new Response(JSON.stringify({}), { status: 200, headers: { "content-type": "application/json" } }));
     globalThis.fetch = fetchMock;
 
     const html = renderToString(
-      <WjsProvider config={{ apiKey: "k", baseUrl: "https://example.test" }}>
+      <WishlistStackProvider config={{ apiKey: "k", baseUrl: "https://example.test" }}>
         <UsesClient />
-      </WjsProvider>,
+      </WishlistStackProvider>,
     );
     expect(typeof html).toBe("string");
   });
 });
-

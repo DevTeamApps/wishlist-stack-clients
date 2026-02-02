@@ -2,10 +2,10 @@
   "$schema": "https://unpkg.com/@changesets/config@3.1.2/schema.json",
   "changelog": [
     "@changesets/changelog-github",
-    { "repo": "DevTeamApps/wjs-client" }
+    { "repo": "DevTeamApps/wishlist-stack-clients" }
   ],
   "commit": false,
-  "fixed": [["@devteam-sdg/wjs-client", "@devteam-sdg/wjs-hydrogen"]],
+  "fixed": [["@sdg.la/wishlist-stack-sdk", "@sdg.la/wishlist-stack-hydrogen"]],
   "linked": [],
   "access": "public",
   "baseBranch": "main",

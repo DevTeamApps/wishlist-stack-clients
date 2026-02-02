@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createRequest } from "../../src/client/request";
-import { WjsApiError } from "../../src/client/errors";
+import { WishlistStackApiError } from "../../src/client/errors";
 import { createMockFetch } from "../helpers/mockFetch";
 
 describe("createRequest", () => {
@@ -22,7 +22,7 @@ describe("createRequest", () => {
     const call = mock.lastCall();
     expect(call).toBeTruthy();
     const headers = new Headers(call!.init?.headers as HeadersInit);
-    expect(headers.get("X-WJS-Api-Key")).toBe("k");
+    expect(headers.get("X-Wishlist-Stack-Api-Key")).toBe("k");
   });
 
   it("adds customer access token only for authenticated endpoints", async () => {
@@ -80,8 +80,8 @@ describe("createRequest", () => {
       err = e;
     }
 
-    expect(err).toBeInstanceOf(WjsApiError);
-    const apiErr = err as WjsApiError;
+    expect(err).toBeInstanceOf(WishlistStackApiError);
+    const apiErr = err as WishlistStackApiError;
     expect(apiErr.status).toBe(401);
     expect(apiErr.method).toBe("GET");
     expect(apiErr.url).toBe("https://example.test/api/groups");
@@ -159,7 +159,7 @@ describe("createRequest", () => {
     expect(result.ok).toBe(true);
   });
 
-  it("throws WjsApiError on non-2xx and captures error body + request id", async () => {
+  it("throws WishlistStackApiError on non-2xx and captures error body + request id", async () => {
     const mock = createMockFetch();
     mock.setResponder(
       () =>
@@ -194,8 +194,8 @@ describe("createRequest", () => {
       err = e;
     }
 
-    expect(err).toBeInstanceOf(WjsApiError);
-    const apiErr = err as WjsApiError;
+    expect(err).toBeInstanceOf(WishlistStackApiError);
+    const apiErr = err as WishlistStackApiError;
     expect(apiErr.status).toBe(400);
     expect(apiErr.method).toBe("POST");
     expect(apiErr.url).toBe("https://example.test/api/groups");

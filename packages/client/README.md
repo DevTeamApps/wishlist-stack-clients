@@ -1,9 +1,9 @@
-# @devteam-sdg/wjs-client
+# @sdg.la/wishlist-stack-sdk
 
-[![npm version](https://img.shields.io/npm/v/@devteam-sdg/wjs-client.svg)](https://www.npmjs.com/package/@devteam-sdg/wjs-client)
+[![npm version](https://img.shields.io/npm/v/@sdg.la/wishlist-stack-sdk.svg)](https://www.npmjs.com/package/@sdg.la/wishlist-stack-sdk)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/)
 
-TypeScript/JavaScript SDK for the Wishlist JS API.
+TypeScript/JavaScript SDK for the Wishlist Stack API.
 
 ## Table of Contents
 
@@ -29,8 +29,8 @@ TypeScript/JavaScript SDK for the Wishlist JS API.
 
 - **TypeScript-first** — Full type definitions with exported types for all requests and responses
 - **Universal** — Works in Node.js, browsers, and edge runtimes (Cloudflare Workers, Deno, etc.)
-- **Flexible API** — Choose between functional `createWjsClient()` or class-based `new WJSClient()`
-- **Built-in error handling** — Structured `WjsApiError` with status codes and API error messages
+- **Flexible API** — Choose between functional `createWishlistStackClient()` or class-based `new WishlistStackClient()`
+- **Built-in error handling** — Structured `WishlistStackApiError` with status codes and API error messages
 - **Pagination support** — All list endpoints support `page` and `pageSize` parameters
 
 ## Requirements
@@ -41,23 +41,23 @@ TypeScript/JavaScript SDK for the Wishlist JS API.
 ## Installation
 
 ```bash
-npm install @devteam-sdg/wjs-client
+npm install @sdg.la/wishlist-stack-sdk
 ```
 
 ```bash
-yarn add @devteam-sdg/wjs-client
+yarn add @sdg.la/wishlist-stack-sdk
 ```
 
 ```bash
-pnpm add @devteam-sdg/wjs-client
+pnpm add @sdg.la/wishlist-stack-sdk
 ```
 
 ## Quick Start
 
 ```ts
-import { createWjsClient } from '@devteam-sdg/wjs-client';
+import { createWishlistStackClient } from '@sdg.la/wishlist-stack-sdk';
 
-const client = createWjsClient({
+const client = createWishlistStackClient({
   apiKey: 'your-merchant-api-key',
   customerAccessToken: 'customer-access-token', // required for authenticated endpoints
 });
@@ -74,11 +74,11 @@ const { lists } = await client.lists.getAll();
 ### Server / Node.js / Workers
 
 ```ts
-import { createWjsClient } from '@devteam-sdg/wjs-client';
+import { createWishlistStackClient } from '@sdg.la/wishlist-stack-sdk';
 
-const client = createWjsClient({
-  apiKey: process.env.WJS_API_KEY!,
-  baseUrl: process.env.WJS_BASE_URL, // optional, defaults to production
+const client = createWishlistStackClient({
+  apiKey: process.env.WISHLIST_STACK_API_KEY!,
+  baseUrl: process.env.WISHLIST_STACK_BASE_URL, // optional, defaults to production
   customerAccessToken: '...customer_access_token...',
 });
 
@@ -88,9 +88,9 @@ const { groups } = await client.groups.getAll();
 ### Browser
 
 ```ts
-import { createWjsClient } from '@devteam-sdg/wjs-client';
+import { createWishlistStackClient } from '@sdg.la/wishlist-stack-sdk';
 
-const client = createWjsClient({
+const client = createWishlistStackClient({
   apiKey: 'YOUR_API_KEY',
   baseUrl: 'https://wishlist-js.fly.dev', // optional
   customerAccessToken: '...optional...',
@@ -103,14 +103,14 @@ const { lists } = await client.lists.getAll();
 
 ### Class API
 
-If you prefer a class-based API, use `WJSClient`:
+If you prefer a class-based API, use `WishlistStackSDK`:
 
 ```ts
-import { WJSClient } from '@devteam-sdg/wjs-client';
+import { WishlistStackSDK } from '@sdg.la/wishlist-stack-sdk';
 
-const client = new WJSClient({
-  apiKey: process.env.WJS_API_KEY!,
-  baseUrl: process.env.WJS_BASE_URL,
+const client = new WishlistStackSDK({
+  apiKey: process.env.WISHLIST_STACK_API_KEY!,
+  baseUrl: process.env.WISHLIST_STACK_BASE_URL,
   customerAccessToken: '...optional...',
 });
 
@@ -128,15 +128,15 @@ await client.getLists();         // alias for client.lists.getAll()
 
 ## Error Handling
 
-Non-2xx responses throw `WjsApiError`. Use the `isWjsApiError` type guard for safe handling:
+Non-2xx responses throw `WishlistStackApiError`. Use the `isWishlistStackApiError` type guard for safe handling:
 
 ```ts
-import { isWjsApiError } from '@devteam-sdg/wjs-client';
+import { isWishlistStackApiError } from '@sdg.la/wishlist-stack-sdk';
 
 try {
   await client.groups.getAll();
 } catch (error) {
-  if (isWjsApiError(error)) {
+  if (isWishlistStackApiError(error)) {
     console.log(error.status);           // HTTP status code
     console.log(error.apiErrors);        // Array of { message, field? }
     console.log(error.apiErrorMessages); // Array of error message strings
@@ -246,12 +246,12 @@ The package exports all types for use in your application:
 ```ts
 import type {
   // Client types
-  CreateWjsClientOptions,
-  WjsClient,
+  CreateWishlistStackClientOptions,
+  WishlistStackClient,
 
   // Error types
-  WjsApiError,
-  WjsApiErrorDetails,
+  WishlistStackApiError,
+  WishlistStackApiErrorDetails,
 
   // Response types
   GetGroupsResponse,
@@ -269,11 +269,11 @@ import type {
   // Common types
   Pagination,
   PaginationParams,
-} from '@devteam-sdg/wjs-client';
+} from '@sdg.la/wishlist-stack-sdk';
 ```
 
 ## Related Packages
 
 | Package | Description |
 |---------|-------------|
-| [`@devteam-sdg/wjs-hydrogen`](https://www.npmjs.com/package/@devteam-sdg/wjs-hydrogen) | Hydrogen/Remix integration with React hooks and middleware |
+| [`@sdg.la/wishlist-stack-hydrogen`](https://www.npmjs.com/package/@sdg.la/wishlist-stack-hydrogen) | Hydrogen/Remix integration with React hooks and middleware |

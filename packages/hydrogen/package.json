@@ -1,10 +1,10 @@
 {
-  "name": "@devteam-sdg/wjs-hydrogen",
-  "version": "1.0.3",
-  "description": "Hydrogen (react-router) integration for wjs-client",
+  "name": "@sdg.la/wishlist-stack-hydrogen",
+  "version": "0.9.0",
+  "description": "Hydrogen (react-router) integration for wishlist-stack-sdk",
   "repository": {
     "type": "git",
-    "url": "https://github.com/DevTeamApps/wjs-client.git",
+    "url": "https://github.com/DevTeamApps/wishlist-stack-clients.git",
     "directory": "packages/hydrogen"
   },
   "type": "module",
@@ -38,7 +38,7 @@
   ],
   "sideEffects": false,
   "dependencies": {
-    "@devteam-sdg/wjs-client": "^1.0.3"
+    "@sdg.la/wishlist-stack-sdk": "^0.9.0"
   },
   "peerDependencies": {
     "react": ">=18",

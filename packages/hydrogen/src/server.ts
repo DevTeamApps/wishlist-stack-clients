@@ -1,7 +1,7 @@
-import { createWjsClient, type WjsClient } from "@devteam-sdg/wjs-client";
-import type { WjsHydrogenOptions, WjsHydrogenServer } from "./types";
+import { createWishlistStackClient, type WishlistStackClient } from "@sdg.la/wishlist-stack-sdk";
+import type { WishlistStackHydrogenOptions, WishlistStackHydrogenServer } from "./types";
 
-function createLazyWjsClient(getClient: () => Promise<WjsClient>): WjsClient {
+function createLazyWishlistStackClient(getClient: () => Promise<WishlistStackClient>): WishlistStackClient {
   return {
     lists: {
       getAll: (query) => getClient().then((c) => c.lists.getAll(query)),
@@ -46,10 +46,10 @@ async function defaultGetCustomerAccessToken(context: unknown): Promise<string |
   }
 }
 
-export function createWjsServerContext(options: WjsHydrogenOptions) {
-  return function attachToContext(context: unknown): { wjs: WjsHydrogenServer; wjsClient: WjsClient } {
+export function createWishlistStackServerContext(options: WishlistStackHydrogenOptions) {
+  return function attachToContext(context: unknown): { wishlistStack: WishlistStackHydrogenServer; wishlistStackClient: WishlistStackClient } {
     if (!options.apiKey) {
-      throw new Error("merchant api key is required. Pass it to createWjsServerContext({ apiKey })");
+      throw new Error("merchant api key is required. Pass it to createWishlistStackServerContext({ apiKey })");
     }
 
     const getToken = async () => {
@@ -60,10 +60,10 @@ export function createWjsServerContext(options: WjsHydrogenOptions) {
       return await defaultGetCustomerAccessToken(context);
     };
 
-    let cachedClient: WjsClient | undefined;
+    let cachedClient: WishlistStackClient | undefined;
     let cachedToken: string | undefined;
 
-    const server: WjsHydrogenServer = {
+    const server: WishlistStackHydrogenServer = {
       async getCustomerAccessToken() {
         return await getToken();
       },
@@ -72,7 +72,7 @@ export function createWjsServerContext(options: WjsHydrogenOptions) {
         // Cache by token value so calls within a single request reuse the client.
         if (cachedClient && cachedToken === token) return cachedClient;
         cachedToken = token;
-        cachedClient = createWjsClient({
+        cachedClient = createWishlistStackClient({
           apiKey: options.apiKey,
           baseUrl: options.baseUrl,
           customerAccessToken: token,
@@ -90,20 +90,20 @@ export function createWjsServerContext(options: WjsHydrogenOptions) {
       },
     };
 
-    const wjsClient = createLazyWjsClient(server.getClient);
+    const wishlistStackClient = createLazyWishlistStackClient(server.getClient);
 
     const anyCtx = context as any;
     if (anyCtx && typeof anyCtx.set === "function") {
       // Context map style (some React Router middleware implementations).
-      anyCtx.set("wjs", server);
-      anyCtx.set("wjsClient", wjsClient);
+      anyCtx.set("wishlistStack", server);
+      anyCtx.set("wishlistStackClient", wishlistStackClient);
     } else if (anyCtx && typeof anyCtx === "object") {
       // Plain object style (Hydrogen load context is an object).
-      anyCtx.wjs = server;
-      anyCtx.wjsClient = wjsClient;
+      anyCtx.wishlistStack = server;
+      anyCtx.wishlistStackClient = wishlistStackClient;
     }
 
-    return { wjs: server, wjsClient };
+    return { wishlistStack: server, wishlistStackClient };
   };
 }
 

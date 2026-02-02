@@ -64,11 +64,11 @@ runIn(tmpDir, `npm i --silent --no-audit --no-fund "${tgzPath}"`, { env });
 console.log("Verifying ESM import...");
 runIn(
   tmpDir,
-  `node -e "import('wjs-client').then(m=>{console.log('esm keys', Object.keys(m));}).catch(e=>{console.error(e);process.exit(1);})"`,
+  `node -e "import('@sdg.la/wishlist-stack-sdk').then(m=>{console.log('esm keys', Object.keys(m));}).catch(e=>{console.error(e);process.exit(1);})"`,
 );
 
 console.log("Verifying CJS require...");
-runIn(tmpDir, `node -e "const m=require('wjs-client'); console.log('cjs keys', Object.keys(m));"`);
+runIn(tmpDir, `node -e "const m=require('@sdg.la/wishlist-stack-sdk'); console.log('cjs keys', Object.keys(m));"`);
 
 console.log("OK");
 

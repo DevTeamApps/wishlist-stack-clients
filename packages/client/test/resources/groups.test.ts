@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { createWjsClient } from "../../src/client/createWjsClient";
-import { WjsApiError } from "../../src/client/errors";
+import { createWishlistStackClient } from "../../src/client/createWishlistStackClient";
+import { WishlistStackApiError } from "../../src/client/errors";
 import { createMockFetch } from "../helpers/mockFetch";
 
 describe("groups resource", () => {
   it("calls GET /api/groups with authenticated headers", async () => {
     const mock = createMockFetch();
-    const client = createWjsClient({
+    const client = createWishlistStackClient({
       baseUrl: "https://example.test",
       apiKey: "k",
       customerAccessToken: "t",
@@ -20,13 +20,13 @@ describe("groups resource", () => {
     expect(call.init?.method).toBe("GET");
 
     const headers = new Headers(call.init?.headers as HeadersInit);
-    expect(headers.get("X-WJS-Api-Key")).toBe("k");
+    expect(headers.get("X-Wishlist-Stack-Api-Key")).toBe("k");
     expect(headers.get("X-Shopify-Customer-Access-Token")).toBe("t");
   });
 
   it("supports pagination query params for groups.getAll()", async () => {
     const mock = createMockFetch();
-    const client = createWjsClient({
+    const client = createWishlistStackClient({
       baseUrl: "https://example.test",
       apiKey: "k",
       customerAccessToken: "t",
@@ -41,7 +41,7 @@ describe("groups resource", () => {
 
   it("supports pagination query params for groups.getById() (paginate lists under group)", async () => {
     const mock = createMockFetch();
-    const client = createWjsClient({
+    const client = createWishlistStackClient({
       baseUrl: "https://example.test",
       apiKey: "k",
       customerAccessToken: "t",
@@ -57,7 +57,7 @@ describe("groups resource", () => {
   it("rejects before fetch if merchant api key is missing", async () => {
     const mock = createMockFetch();
     expect(() =>
-      createWjsClient({
+      createWishlistStackClient({
         baseUrl: "https://example.test",
         apiKey: "",
         fetch: mock.fetch,
@@ -83,7 +83,7 @@ describe("groups resource", () => {
       });
     });
 
-    const client = createWjsClient({
+    const client = createWishlistStackClient({
       baseUrl: "https://example.test",
       apiKey: "k",
       fetch: mock.fetch,
@@ -95,8 +95,8 @@ describe("groups resource", () => {
     } catch (e) {
       err = e;
     }
-    expect(err).toBeInstanceOf(WjsApiError);
-    expect((err as WjsApiError).status).toBe(401);
+    expect(err).toBeInstanceOf(WishlistStackApiError);
+    expect((err as WishlistStackApiError).status).toBe(401);
     expect(mock.fetch).toHaveBeenCalledTimes(1);
 
     const call = mock.lastCall()!;

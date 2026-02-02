@@ -1,4 +1,4 @@
-export type WjsHydrogenOptions = {
+export type WishlistStackHydrogenOptions = {
   apiKey: string;
   baseUrl?: string;
   /**
@@ -14,24 +14,23 @@ export type BootstrapClientConfig = {
   customerAccessToken?: string;
 };
 
-export type WjsHydrogenServer = {
+export type WishlistStackHydrogenServer = {
   getCustomerAccessToken(): Promise<string | undefined>;
-  getClient(): Promise<import("@devteam-sdg/wjs-client").WjsClient>;
+  getClient(): Promise<import("@sdg.la/wishlist-stack-sdk").WishlistStackClient>;
   bootstrapClientConfig(opts?: { exposeCustomerAccessToken?: boolean }): Promise<BootstrapClientConfig>;
 };
 
 declare global {
-  // Merge into Hydrogen’s global additional context type so `context.wjs` is typed in loaders/actions.
+  // Merge into Hydrogen's global additional context type so `context.wishlistStack` is typed in loaders/actions.
   // Consumers can also define their own additional context in their app alongside this.
   interface HydrogenAdditionalContext {
-    wjs: WjsHydrogenServer;
+    wishlistStack: WishlistStackHydrogenServer;
     /**
      * Lazy, request-scoped client. Methods automatically resolve the underlying
      * authenticated client for the current request.
      *
-     * Usage: `await context.wjsClient.groups.getAll()`
+     * Usage: `await context.wishlistStackClient.groups.getAll()`
      */
-    wjsClient: import("@devteam-sdg/wjs-client").WjsClient;
+    wishlistStackClient: import("@sdg.la/wishlist-stack-sdk").WishlistStackClient;
   }
 }
-

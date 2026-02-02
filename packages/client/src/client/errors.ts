@@ -1,4 +1,4 @@
-export type WjsApiErrorDetails<TBody = unknown> = {
+export type WishlistStackApiErrorDetails<TBody = unknown> = {
   status: number;
   url: string;
   method: string;
@@ -31,15 +31,15 @@ function extractApiErrors(body: unknown): Array<{ message: string; field?: strin
   return out.length ? out : undefined;
 }
 
-export class WjsApiError<TBody = unknown> extends Error {
-  readonly name = "WjsApiError";
+export class WishlistStackApiError<TBody = unknown> extends Error {
+  readonly name = "WishlistStackApiError";
   readonly status: number;
   readonly url: string;
   readonly method: string;
   readonly requestId?: string;
   readonly body?: TBody;
 
-  constructor(message: string, details: WjsApiErrorDetails<TBody>) {
+  constructor(message: string, details: WishlistStackApiErrorDetails<TBody>) {
     super(message);
     this.status = details.status;
     this.url = details.url;
@@ -66,12 +66,12 @@ export class WjsApiError<TBody = unknown> extends Error {
 }
 
 /**
- * Bundler-safe type guard (prefer this over `instanceof WjsApiError`).
+ * Bundler-safe type guard (prefer this over `instanceof WishlistStackApiError`).
  */
-export function isWjsApiError(value: unknown): value is WjsApiError<unknown> {
+export function isWishlistStackApiError(value: unknown): value is WishlistStackApiError<unknown> {
   if (!isRecord(value)) return false;
   return (
-    (value as any).name === "WjsApiError" &&
+    (value as any).name === "WishlistStackApiError" &&
     typeof (value as any).status === "number" &&
     typeof (value as any).url === "string" &&
     typeof (value as any).method === "string"

@@ -1,20 +1,20 @@
 // Local smoke runner (manual): builds then imports from dist.
 //
 // Usage:
-//   WJS_BASE_URL="https://api.wjs.com" WJS_API_KEY="..." node examples/smoke.mjs
-//   WJS_BASE_URL="..." WJS_API_KEY="..." WJS_CUSTOMER_ACCESS_TOKEN="..." node examples/smoke.mjs
+//   WISHLIST_STACK_BASE_URL="https://api.example.com" WISHLIST_STACK_API_KEY="..." node examples/smoke.mjs
+//   WISHLIST_STACK_BASE_URL="..." WISHLIST_STACK_API_KEY="..." WISHLIST_STACK_CUSTOMER_ACCESS_TOKEN="..." node examples/smoke.mjs
 
-import { createWjsClient } from "../dist/index.js";
+import { createWishlistStackClient } from "../packages/client/dist/index.js";
 
-const baseUrl = process.env.WJS_BASE_URL;
-const apiKey = process.env.WJS_API_KEY;
-const customerAccessToken = process.env.WJS_CUSTOMER_ACCESS_TOKEN;
+const baseUrl = process.env.WISHLIST_STACK_BASE_URL;
+const apiKey = process.env.WISHLIST_STACK_API_KEY;
+const customerAccessToken = process.env.WISHLIST_STACK_CUSTOMER_ACCESS_TOKEN;
 
 if (!baseUrl || !apiKey) {
-  throw new Error("Set WJS_BASE_URL and WJS_API_KEY to run this smoke script.");
+  throw new Error("Set WISHLIST_STACK_BASE_URL and WISHLIST_STACK_API_KEY to run this smoke script.");
 }
 
-const client = createWjsClient({ baseUrl, apiKey, customerAccessToken });
+const client = createWishlistStackClient({ baseUrl, apiKey, customerAccessToken });
 
 console.log("Calling shared.getSharedList('demo')...");
 try {
@@ -33,6 +33,5 @@ if (customerAccessToken) {
     console.error("groups.getAll failed:", e);
   }
 } else {
-  console.log("Skipping authenticated call; set WJS_CUSTOMER_ACCESS_TOKEN to test it.");
+  console.log("Skipping authenticated call; set WISHLIST_STACK_CUSTOMER_ACCESS_TOKEN to test it.");
 }
-
