@@ -1,6 +1,6 @@
 {
   "name": "@sdg.la/wishlist-stack-sdk",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "TypeScript SDK for the Wishlist Stack API",
   "repository": {
     "type": "git",
