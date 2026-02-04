@@ -1,5 +1,11 @@
 # @sdg.la/wishlist-stack-sdk
 
+## 0.9.3
+
+### Patch Changes
+
+- [#8](https://github.com/DevTeamApps/wishlist-stack-clients/pull/8) [`aee775c`](https://github.com/DevTeamApps/wishlist-stack-clients/commit/aee775c81d2a2674eb25d2cc06dfcb51e92d738b) Thanks [@tdbunting](https://github.com/tdbunting)! - Update line item change payload to include position
+
 ## 0.9.2
 
 ### Patch Changes
