@@ -7,6 +7,7 @@ export type CreateListBody = {
 export type UpdateListBody = {
   name?: string;
   description?: string;
+  groupId?: string;
 };
 
 export type AddItemsToListBody = {
@@ -20,7 +21,6 @@ export type AddItemsToListBody = {
 export type UpdateListItemBody = {
   quantity?: number;
   note?: string;
-  groupId?: string;
   position?: number;
 };
 

@@ -92,7 +92,7 @@ import { createWishlistStackClient } from '@sdg.la/wishlist-stack-sdk';
 
 const client = createWishlistStackClient({
   apiKey: 'YOUR_API_KEY',
-  baseUrl: 'https://wishlist-js.fly.dev', // optional
+  baseUrl: 'https://wishlist.devteam.run', // optional default
   customerAccessToken: '...optional...',
 });
 
@@ -221,7 +221,7 @@ await client.lists.getById('list-id', { page: 1, pageSize: 25 });
 { page?: number; pageSize?: number }
 
 // Create/Update body
-{ name?: string; description?: string }
+{ name?: string; description?: string, groupId?: string }
 
 // Add items body
 { items: Array<{ variantId: string; quantity?: number; note?: string }> }
