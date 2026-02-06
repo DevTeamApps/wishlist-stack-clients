@@ -1,5 +1,11 @@
 # @sdg.la/wishlist-stack-sdk
 
+## 0.9.5
+
+### Patch Changes
+
+- [`de5f6d0`](https://github.com/DevTeamApps/wishlist-stack-clients/commit/de5f6d0484384d51055ae4423d772d7e3a4f3c92) Thanks [@tdbunting](https://github.com/tdbunting)! - Update documentation
+
 ## 0.9.4
 
 ### Patch Changes
