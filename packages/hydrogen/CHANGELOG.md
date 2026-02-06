@@ -1,5 +1,12 @@
 # @sdg.la/wishlist-stack-hydrogen
 
+## 0.9.4
+
+### Patch Changes
+
+- Updated dependencies [[`9b8c870`](https://github.com/DevTeamApps/wishlist-stack-clients/commit/9b8c8709c3e8a95cc2c48bf18bc69b20486ebf00), [`59c8544`](https://github.com/DevTeamApps/wishlist-stack-clients/commit/59c85448cee0663de223e3f4676aab205914efdd)]:
+  - @sdg.la/wishlist-stack-sdk@0.9.4
+
 ## 0.9.3
 
 ### Patch Changes

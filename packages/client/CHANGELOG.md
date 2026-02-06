@@ -1,5 +1,13 @@
 # @sdg.la/wishlist-stack-sdk
 
+## 0.9.4
+
+### Patch Changes
+
+- [`9b8c870`](https://github.com/DevTeamApps/wishlist-stack-clients/commit/9b8c8709c3e8a95cc2c48bf18bc69b20486ebf00) Thanks [@tdbunting](https://github.com/tdbunting)! - Add custom property storage for wishlist items
+
+- [`59c8544`](https://github.com/DevTeamApps/wishlist-stack-clients/commit/59c85448cee0663de223e3f4676aab205914efdd) Thanks [@tdbunting](https://github.com/tdbunting)! - Update list payload type and documentation
+
 ## 0.9.3
 
 ### Patch Changes
