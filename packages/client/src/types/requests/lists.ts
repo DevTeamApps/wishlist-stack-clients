@@ -15,6 +15,7 @@ export type AddItemsToListBody = {
     variantId?: string;
     quantity?: number;
     note?: string;
+    properties?: Record<string, unknown> | null;
   }>;
 };
 
@@ -22,5 +23,6 @@ export type UpdateListItemBody = {
   quantity?: number;
   note?: string;
   position?: number;
+  properties?: Record<string, unknown> | null;
 };
 

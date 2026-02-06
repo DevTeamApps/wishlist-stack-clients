@@ -224,10 +224,12 @@ await client.lists.getById('list-id', { page: 1, pageSize: 25 });
 { name?: string; description?: string, groupId?: string }
 
 // Add items body
-{ items: Array<{ variantId: string; quantity?: number; note?: string }> }
+{ items: Array<{ variantId: string; quantity?: number; note?: string; properties?: object }> }
+// properties: optional custom key-value data for the item (plain JSON object)
 
 // Update item body
-{ quantity?: number; note?: string }
+{ quantity?: number; note?: string; position?: number; properties?: object }
+// properties: optional JSON object to store custom data on the item
 ```
 
 ### Shared
