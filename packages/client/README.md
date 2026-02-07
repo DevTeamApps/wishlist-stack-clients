@@ -720,17 +720,20 @@ await client.lists.addItems('list-id', {
 
 #### `lists.updateItem(listId, itemId, body)`
 
-Update an item on a list (quantity, note, position, or custom properties).
+Update an item on a list (variant, quantity, note, position, or custom properties). When `variantId` is provided, the item's product data is re-fetched from Shopify to reflect the new variant.
 
 - **Endpoint:** `PATCH /api/lists/{listId}/items/{itemId}`
 - **Parameters:**
   - `listId` — `string`
   - `itemId` — `string`
-  - `body` — `{ quantity?: number; note?: string; position?: number; properties?: Record<string, unknown> | null }`
+  - `body` — `{ variantId?: string; quantity?: number; note?: string; position?: number; properties?: Record<string, unknown> | null }`
 - **Returns:** `Promise<UpdateListItemResponse>` — the updated hydrated item
 
 ```ts
 await client.lists.updateItem('list-id', 'item-id', { quantity: 3, note: 'Updated note' });
+
+// Change the variant stored on the item
+await client.lists.updateItem('list-id', 'item-id', { variantId: '46932429275374' });
 ```
 
 <details>

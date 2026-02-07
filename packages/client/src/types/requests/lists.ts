@@ -20,6 +20,7 @@ export type AddItemsToListBody = {
 };
 
 export type UpdateListItemBody = {
+  variantId?: string;
   quantity?: number;
   note?: string;
   position?: number;
