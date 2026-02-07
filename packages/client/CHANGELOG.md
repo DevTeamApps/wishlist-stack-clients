@@ -1,5 +1,11 @@
 # @sdg.la/wishlist-stack-sdk
 
+## 0.9.6
+
+### Patch Changes
+
+- [`bd4d49e`](https://github.com/DevTeamApps/wishlist-stack-clients/commit/bd4d49eb0766e3599afc0fe225c06284985ba50d) Thanks [@tdbunting](https://github.com/tdbunting)! - Add ability to update variant on a list item
+
 ## 0.9.5
 
 ### Patch Changes
