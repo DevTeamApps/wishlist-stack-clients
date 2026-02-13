@@ -811,6 +811,43 @@ await client.lists.removeItem('list-id', 'item-id');
 
 ---
 
+#### `lists.reorderItems(listId, body)`
+
+Reorder items in a list. You can submit all items or just a subset. Each submitted item specifies its ID and desired 1-based position. Items not included in the request keep their relative order and fill the remaining slots.
+
+- **Endpoint:** `POST /api/lists/{listId}/reorder`
+- **Parameters:**
+  - `listId` — `string`
+  - `body` — `{ items: Array<{ id: string; position: number }> }`
+- **Returns:** `Promise<ReorderListItemsResponse>`
+
+```ts
+await client.lists.reorderItems('list-id', {
+  items: [
+    { id: 'item-3', position: 1 },
+    { id: 'item-1', position: 2 },
+    { id: 'item-2', position: 3 },
+  ],
+});
+```
+
+<details>
+<summary>Example response</summary>
+
+```json
+{
+  "updated": [
+    { "id": "item-3", "position": 1 },
+    { "id": "item-1", "position": 2 },
+    { "id": "item-2", "position": 3 }
+  ]
+}
+```
+
+</details>
+
+---
+
 #### `lists.share(listId)`
 
 Mark a list as shared (public read-only).
@@ -940,6 +977,8 @@ import type {
   UpdateListBody,
   AddItemsToListBody,
   UpdateListItemBody,
+  ReorderListItemsBody,
+  ReorderListItemsResponse,
 
   // Shared
   GetSharedListResponse,

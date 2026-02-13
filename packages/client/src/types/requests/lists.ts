@@ -27,3 +27,7 @@ export type UpdateListItemBody = {
   properties?: Record<string, unknown> | null;
 };
 
+export type ReorderListItemsBody = {
+  items: Array<{ id: string; position: number }>;
+};
+

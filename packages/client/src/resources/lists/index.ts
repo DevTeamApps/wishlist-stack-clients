@@ -3,6 +3,7 @@ import type { PaginatedQuery } from "../../types/query-options";
 import type {
   AddItemsToListBody,
   CreateListBody,
+  ReorderListItemsBody,
   UpdateListBody,
   UpdateListItemBody,
 } from "../../types/requests/lists";
@@ -14,6 +15,7 @@ import type {
   MarkListSharedResponse,
   RemoveItemFromListResponse,
   RemoveListResponse,
+  ReorderListItemsResponse,
   RevokeListSharedResponse,
   UpdateListDetailsResponse,
   UpdateListItemResponse,
@@ -96,6 +98,15 @@ export function createListsResource(request: RequestFn) {
         method: "DELETE",
         path: `/api/lists/${encodeURIComponent(listId)}/items/${encodeURIComponent(itemId)}`,
         auth: "authenticated",
+      }),
+
+    /** Reorder all items in a list. */
+    reorderItems: (listId: string, body: ReorderListItemsBody) =>
+      request<ReorderListItemsResponse, ReorderListItemsBody>({
+        method: "POST",
+        path: `/api/lists/${encodeURIComponent(listId)}/reorder`,
+        auth: "authenticated",
+        body,
       }),
 
     /** Mark list as shared (public read-only). */
