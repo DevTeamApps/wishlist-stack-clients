@@ -1,5 +1,11 @@
 # @sdg.la/wishlist-stack-sdk
 
+## 0.9.7
+
+### Patch Changes
+
+- [#13](https://github.com/DevTeamApps/wishlist-stack-clients/pull/13) [`94a1669`](https://github.com/DevTeamApps/wishlist-stack-clients/commit/94a16690ab6dc7a1a71db5582c0a666c3d7e6bd8) Thanks [@tdbunting](https://github.com/tdbunting)! - Add functions to bulk update list item positions
+
 ## 0.9.6
 
 ### Patch Changes
