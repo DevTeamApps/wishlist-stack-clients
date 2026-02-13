@@ -12,6 +12,7 @@ function createLazyWishlistStackClient(getClient: () => Promise<WishlistStackCli
       addItems: (listId, body) => getClient().then((c) => c.lists.addItems(listId, body)),
       updateItem: (listId, itemId, body) => getClient().then((c) => c.lists.updateItem(listId, itemId, body)),
       removeItem: (listId, itemId) => getClient().then((c) => c.lists.removeItem(listId, itemId)),
+      reorderItems: (listId, body) => getClient().then((c) => c.lists.reorderItems(listId, body)),
       share: (listId) => getClient().then((c) => c.lists.share(listId)),
       unshare: (listId) => getClient().then((c) => c.lists.unshare(listId)),
       addItemsLegacy: (id, body) => getClient().then((c) => c.lists.addItemsLegacy(id, body)),
