@@ -87,6 +87,9 @@ export type RemoveListResponse = OkResponse;
 export type AddItemsToListResponse = unknown;
 export type UpdateListItemResponse = unknown;
 export type RemoveItemFromListResponse = OkResponse;
+export type ReorderListItemsResponse = {
+  updated: Array<{ id: string; position: number }>;
+};
 export type MarkListSharedResponse = unknown;
 export type RevokeListSharedResponse = unknown;
 
