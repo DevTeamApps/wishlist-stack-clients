@@ -185,11 +185,11 @@ await client.lists.getById('list-id', { page: 1, pageSize: 25 });
 Fetch all groups for the authenticated customer.
 
 - **Endpoint:** `GET /api/groups`
-- **Parameters:** `query?` — `{ page?: number; pageSize?: number }`
+- **Parameters:** `query?` — `{ page?: number; pageSize?: number, query?: string }`
 - **Returns:** `Promise<GetGroupsResponse>`
 
 ```ts
-const { groups, pagination } = await client.groups.getAll({ page: 1, pageSize: 10 });
+const { groups, pagination } = await client.groups.getAll({ page: 1, pageSize: 10, query: 'holiday' });
 ```
 
 <details>
@@ -240,11 +240,11 @@ Fetch a single group by ID. Lists within the group are paginated.
 - **Endpoint:** `GET /api/groups/{groupId}`
 - **Parameters:**
   - `groupId` — `string`
-  - `query?` — `{ page?: number; pageSize?: number }`
+  - `query?` — `{ page?: number; pageSize?: number, query?: string }`
 - **Returns:** `Promise<GetGroupResponse>`
 
 ```ts
-const group = await client.groups.getById('group-id', { page: 1, pageSize: 25 });
+const group = await client.groups.getById('group-id', { page: 1, pageSize: 25, query: 'gift' });
 ```
 
 <details>
@@ -472,7 +472,7 @@ await client.groups.unshare('group-id');
 Fetch all lists for the authenticated customer.
 
 - **Endpoint:** `GET /api/lists`
-- **Parameters:** `query?` — `{ page?: number; pageSize?: number }`
+- **Parameters:** `query?` — `{ page?: number; pageSize?: number, query?: string }`
 - **Returns:** `Promise<GetListsResponse>`
 
 ```ts
