@@ -26,7 +26,7 @@ type RequestFn = <TResponse = unknown, TBody = unknown>(
 ) => Promise<TResponse>;
 
 export type GetListsQuery = PaginatedQuery;
-export type GetListQuery = PaginatedQuery;
+export type GetListQuery = Omit<PaginatedQuery, "query">;
 
 export function createListsResource(request: RequestFn) {
   return {
