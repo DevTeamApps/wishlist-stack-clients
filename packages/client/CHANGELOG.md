@@ -1,5 +1,11 @@
 # @sdg.la/wishlist-stack-sdk
 
+## 0.10.0
+
+### Minor Changes
+
+- [#15](https://github.com/DevTeamApps/wishlist-stack-clients/pull/15) [`86932cb`](https://github.com/DevTeamApps/wishlist-stack-clients/commit/86932cb6723bedf14725a435a5ade633ae0d3c54) Thanks [@n8cotoa](https://github.com/n8cotoa)! - Update types for query search parameter
+
 ## 0.9.7
 
 ### Patch Changes
