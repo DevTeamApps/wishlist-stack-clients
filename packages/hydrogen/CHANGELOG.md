@@ -1,5 +1,14 @@
 # @sdg.la/wishlist-stack-hydrogen
 
+## 0.10.1
+
+### Patch Changes
+
+- [#17](https://github.com/DevTeamApps/wishlist-stack-clients/pull/17) [`4107e30`](https://github.com/DevTeamApps/wishlist-stack-clients/commit/4107e3075bc395b167cb8cef0a99ce1a6338cd97) Thanks [@n8cotoa](https://github.com/n8cotoa)! - Ensure query args are passed to internal methods for fuzzy search feature
+
+- Updated dependencies []:
+  - @sdg.la/wishlist-stack-sdk@0.10.1
+
 ## 0.10.0
 
 ### Minor Changes
