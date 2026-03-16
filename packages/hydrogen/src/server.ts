@@ -18,8 +18,8 @@ function createLazyWishlistStackClient(getClient: () => Promise<WishlistStackCli
       addItemsLegacy: (id, body) => getClient().then((c) => c.lists.addItemsLegacy(id, body)),
     },
     groups: {
-      getAll: () => getClient().then((c) => c.groups.getAll()),
-      getById: (groupId) => getClient().then((c) => c.groups.getById(groupId)),
+      getAll: (query) => getClient().then((c) => c.groups.getAll(query)),
+      getById: (groupId, query) => getClient().then((c) => c.groups.getById(groupId, query)),
       create: (body) => getClient().then((c) => c.groups.create(body)),
       update: (groupId, body) => getClient().then((c) => c.groups.update(groupId, body)),
       remove: (groupId) => getClient().then((c) => c.groups.remove(groupId)),
