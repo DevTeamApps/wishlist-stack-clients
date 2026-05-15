@@ -265,8 +265,6 @@ setState((prev) => ({
 ```
 
 #### Hydrating saved IDs from the server
-
-There is currently no dedicated endpoint for fetching all saved variant IDs.
 To hydrate `savedVariantIds`, fetch lists server-side and extract the IDs:
 
 ```ts
