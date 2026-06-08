@@ -19,7 +19,8 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "AUTH_EXAMPLE.md"
   ],
   "sideEffects": false,
   "scripts": {
