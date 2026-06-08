@@ -14,6 +14,7 @@ TypeScript/JavaScript SDK for the Wishlist Stack API.
 - [Usage](#usage)
   - [Server / Node.js / Workers](#server--nodejs--workers)
   - [Browser](#browser)
+  - [Shopify Liquid authentication](#shopify-liquid-authentication)
   - [Class API](#class-api)
 - [Error Handling](#error-handling)
 - [Pagination](#pagination)
@@ -101,6 +102,12 @@ const { lists } = await client.lists.getAll();
 ```
 
 > **Note:** If you use a strict Content Security Policy (CSP), you must allow your API domain in `connect-src`.
+
+### Shopify Liquid authentication
+
+Authenticated SDK calls require a customer access token. For Liquid themes, obtain one via Shopify's Customer Account API OAuth flow in the browser.
+
+See [AUTH_EXAMPLE.md](./AUTH_EXAMPLE.md) for an example-only reference implementation adapted from Shopify's docs.
 
 ### Class API
 
