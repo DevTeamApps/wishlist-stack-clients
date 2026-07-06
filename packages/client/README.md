@@ -14,6 +14,7 @@ TypeScript/JavaScript SDK for the Wishlist Stack API.
 - [Usage](#usage)
   - [Server / Node.js / Workers](#server--nodejs--workers)
   - [Browser](#browser)
+  - [Raw HTML (script module)](#raw-html-script-module)
   - [Shopify Liquid authentication](#shopify-liquid-authentication)
   - [Class API](#class-api)
 - [Error Handling](#error-handling)
@@ -102,6 +103,29 @@ const { lists } = await client.lists.getAll();
 ```
 
 > **Note:** If you use a strict Content Security Policy (CSP), you must allow your API domain in `connect-src`.
+
+### Raw HTML (script module)
+
+You can load the SDK in plain HTML without a bundler by using a `<script type="module">` tag and importing from a CDN:
+
+```html
+<script type="module">
+  import { createWishlistStackClient } from "https://cdn.jsdelivr.net/npm/@sdg.la/wishlist-stack-sdk@0.10.1/+esm";
+
+  window.wishlistClient = createWishlistStackClient({
+    apiKey: "YOUR_MERCHANT_API_KEY",
+    customerAccessToken: "...",
+  });
+
+  // Example usage:
+  await window.wishlistClient.groups.getAll();
+  await window.wishlistClient.lists.getAll();
+</script>
+```
+
+Pin the version in the CDN URL (as shown above) so updates do not break your integration unexpectedly.
+
+> **Note:** With a strict CSP, allow `https://cdn.jsdelivr.net` in `script-src` (for the module import) and your API domain in `connect-src`.
 
 ### Shopify Liquid authentication
 
