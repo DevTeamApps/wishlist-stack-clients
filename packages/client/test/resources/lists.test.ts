@@ -18,5 +18,21 @@ describe("lists resource", () => {
     expect(String(call.input)).toBe("https://example.test/api/lists/l_1?page=4&pageSize=25");
     expect(call.init?.method).toBe("GET");
   });
+
+  it("calls POST /api/lists/:id/duplicate", async () => {
+    const mock = createMockFetch();
+    const client = createWishlistStackClient({
+      baseUrl: "https://example.test",
+      apiKey: "k",
+      customerAccessToken: "t",
+      fetch: mock.fetch,
+    });
+
+    await client.lists.duplicate("l_1");
+
+    const call = mock.lastCall()!;
+    expect(String(call.input)).toBe("https://example.test/api/lists/l_1/duplicate");
+    expect(call.init?.method).toBe("POST");
+  });
 });
 

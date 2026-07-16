@@ -81,8 +81,11 @@ export type GetListsResponse = {
 /** GET `/api/lists/:listId` */
 export type GetListResponse = ListDetail;
 
-export type CreateListResponse = unknown;
-export type UpdateListDetailsResponse = unknown;
+export type ListMutationResponse = Omit<ListSummary, "featuredProducts">;
+
+export type CreateListResponse = ListMutationResponse;
+export type DuplicateListResponse = ListMutationResponse;
+export type UpdateListDetailsResponse = ListMutationResponse;
 export type RemoveListResponse = OkResponse;
 export type AddItemsToListResponse = unknown;
 export type UpdateListItemResponse = unknown;
@@ -90,6 +93,6 @@ export type RemoveItemFromListResponse = OkResponse;
 export type ReorderListItemsResponse = {
   updated: Array<{ id: string; position: number }>;
 };
-export type MarkListSharedResponse = unknown;
-export type RevokeListSharedResponse = unknown;
+export type MarkListSharedResponse = ListMutationResponse;
+export type RevokeListSharedResponse = ListMutationResponse;
 

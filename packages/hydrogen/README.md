@@ -102,7 +102,8 @@ Now in loaders/actions you can do:
 
 ```ts
 export async function loader({context}: any) {
-  return await context.wishlistStackClient.groups.getAll();
+  // Opt-in to lists + hydrated items in one call
+  return await context.wishlistStackClient.groups.getAll({ includeLists: true });
 }
 ```
 

@@ -10,6 +10,7 @@ import type {
 import type {
   AddItemsToListResponse,
   CreateListResponse,
+  DuplicateListResponse,
   GetListResponse,
   GetListsResponse,
   MarkListSharedResponse,
@@ -71,6 +72,18 @@ export function createListsResource(request: RequestFn) {
       request<RemoveListResponse>({
         method: "DELETE",
         path: `/api/lists/${encodeURIComponent(listId)}`,
+        auth: "authenticated",
+      }),
+
+    /**
+     * Duplicate a list (including all items) in a single call.
+     * The copy stays in the same group (if any), is named `Copy of {original name}`,
+     * and is not shared.
+     */
+    duplicate: (listId: string) =>
+      request<DuplicateListResponse>({
+        method: "POST",
+        path: `/api/lists/${encodeURIComponent(listId)}/duplicate`,
         auth: "authenticated",
       }),
 
