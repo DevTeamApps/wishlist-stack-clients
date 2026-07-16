@@ -1,5 +1,11 @@
 # @sdg.la/wishlist-stack-sdk
 
+## 0.11.0
+
+### Minor Changes
+
+- [#23](https://github.com/DevTeamApps/wishlist-stack-clients/pull/23) [`cfc51f6`](https://github.com/DevTeamApps/wishlist-stack-clients/commit/cfc51f6abc5d014912b9ca2cb4bbd2dbe60c6d11) Thanks [@n8cotoa](https://github.com/n8cotoa)! - Add groups.getAll includeLists support and group/list duplicate endpoints
+
 ## 0.10.1
 
 ## 0.10.0
