@@ -39,6 +39,37 @@ describe("groups resource", () => {
     expect(String(call.input)).toBe("https://example.test/api/groups?page=2&pageSize=10");
   });
 
+  it("normalizes includeLists to includeLists=1 for groups.getAll()", async () => {
+    const mock = createMockFetch();
+    const client = createWishlistStackClient({
+      baseUrl: "https://example.test",
+      apiKey: "k",
+      customerAccessToken: "t",
+      fetch: mock.fetch,
+    });
+
+    await client.groups.getAll({ includeLists: true, page: 1 });
+
+    const call = mock.lastCall()!;
+    expect(String(call.input)).toBe("https://example.test/api/groups?page=1&includeLists=1");
+  });
+
+  it("calls POST /api/groups/:id/duplicate", async () => {
+    const mock = createMockFetch();
+    const client = createWishlistStackClient({
+      baseUrl: "https://example.test",
+      apiKey: "k",
+      customerAccessToken: "t",
+      fetch: mock.fetch,
+    });
+
+    await client.groups.duplicate("g_1");
+
+    const call = mock.lastCall()!;
+    expect(String(call.input)).toBe("https://example.test/api/groups/g_1/duplicate");
+    expect(call.init?.method).toBe("POST");
+  });
+
   it("supports pagination query params for groups.getById() (paginate lists under group)", async () => {
     const mock = createMockFetch();
     const client = createWishlistStackClient({

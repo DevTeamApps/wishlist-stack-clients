@@ -185,6 +185,9 @@ Endpoints that return lists support pagination via query parameters:
 // Paginate groups
 await client.groups.getAll({ page: 2, pageSize: 10 });
 
+// Include lists + hydrated items on groups.getAll
+await client.groups.getAll({ includeLists: true });
+
 // Paginate lists within a group
 await client.groups.getById('group-id', { page: 1, pageSize: 25 });
 
@@ -216,11 +219,16 @@ await client.lists.getById('list-id', { page: 1, pageSize: 25 });
 Fetch all groups for the authenticated customer.
 
 - **Endpoint:** `GET /api/groups`
-- **Parameters:** `query?` — `{ page?: number; pageSize?: number, query?: string }`
+- **Parameters:** `query?` — `{ page?: number; pageSize?: number; query?: string; includeLists?: boolean | 1 | "1" }`
 - **Returns:** `Promise<GetGroupsResponse>`
+
+Pass `includeLists: true` (sent as `includeLists=1`) to embed every list under each group with fully hydrated items — useful for loading projects/boards in one call instead of per-group `getById` fan-out. Without it, `lists` is an empty array and only `featuredItems` are populated.
 
 ```ts
 const { groups, pagination } = await client.groups.getAll({ page: 1, pageSize: 10, query: 'holiday' });
+
+// Include lists + hydrated items
+const { groups: withLists } = await client.groups.getAll({ includeLists: true });
 ```
 
 <details>
@@ -236,6 +244,7 @@ const { groups, pagination } = await client.groups.getAll({ page: 1, pageSize: 1
       "position": 1,
       "shared": false,
       "listCount": 2,
+      "lists": [],
       "createdAt": "2025-01-10T08:00:00.000Z",
       "updatedAt": "2025-01-18T12:00:00.000Z",
       "featuredItems": [
@@ -249,6 +258,75 @@ const { groups, pagination } = await client.groups.getAll({ page: 1, pageSize: 1
           }
         }
       ]
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "pageSize": 10,
+    "totalCount": 1,
+    "totalPages": 1
+  }
+}
+```
+
+</details>
+
+<details>
+<summary>Example response with <code>includeLists: true</code></summary>
+
+```json
+{
+  "groups": [
+    {
+      "id": "cml8drad90001js09weonjojg",
+      "name": "Holiday Lists",
+      "description": "All my holiday wishlists",
+      "position": 1,
+      "shared": false,
+      "listCount": 1,
+      "lists": [
+        {
+          "id": "cml8drg8x0003js093j4ua6p8",
+          "name": "Gift Ideas",
+          "description": "Birthday gift ideas",
+          "position": 1,
+          "shared": false,
+          "itemCount": 1,
+          "items": [
+            {
+              "id": "item_1",
+              "quantity": 1,
+              "position": 1,
+              "userNote": null,
+              "product": {
+                "id": "gid://shopify/Product/1",
+                "title": "Example Product",
+                "description": "",
+                "availableForSale": true,
+                "handle": "example-product",
+                "productType": null,
+                "category": null,
+                "tags": [],
+                "onlineStoreUrl": null,
+                "metafields": [],
+                "vendor": null,
+                "variant": {
+                  "id": "46932429275374",
+                  "title": "Default",
+                  "price": { "amount": "10.00", "currencyCode": "USD" },
+                  "availableForSale": true,
+                  "currentlyNotInStock": false,
+                  "selectedOptions": [],
+                  "metafields": []
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "featuredItems": [],
+      "createdAt": "2025-01-10T08:00:00.000Z",
+      "updatedAt": "2025-01-18T12:00:00.000Z"
     }
   ],
   "pagination": {
@@ -408,6 +486,38 @@ await client.groups.remove('group-id');
 
 ```json
 { "ok": true }
+```
+
+</details>
+
+---
+
+#### `groups.duplicate(groupId)`
+
+Duplicate a group in a single call, including all of its lists and items. The copy is named `Copy of {original name}` and is not shared.
+
+- **Endpoint:** `POST /api/groups/{groupId}/duplicate`
+- **Parameters:** `groupId` — `string`
+- **Returns:** `Promise<DuplicateGroupResponse>`
+
+```ts
+const copy = await client.groups.duplicate('group-id');
+```
+
+<details>
+<summary>Example response</summary>
+
+```json
+{
+  "id": "cmlbe49qk0001ju094x1ya9co",
+  "name": "Copy of Holiday Lists",
+  "description": "All my holiday wishlists",
+  "position": 2,
+  "shared": false,
+  "listCount": 2,
+  "createdAt": "2025-01-22T09:15:00.000Z",
+  "updatedAt": "2025-01-22T09:15:00.000Z"
+}
 ```
 
 </details>
@@ -716,6 +826,38 @@ await client.lists.remove('list-id');
 
 ---
 
+#### `lists.duplicate(listId)`
+
+Duplicate a list in a single call, including all of its items. The copy stays in the same group (if any), is named `Copy of {original name}`, and is not shared.
+
+- **Endpoint:** `POST /api/lists/{listId}/duplicate`
+- **Parameters:** `listId` — `string`
+- **Returns:** `Promise<DuplicateListResponse>`
+
+```ts
+const copy = await client.lists.duplicate('list-id');
+```
+
+<details>
+<summary>Example response</summary>
+
+```json
+{
+  "id": "cml8drg8x0003js093j4ua6p8",
+  "name": "Copy of Gift Ideas",
+  "description": "Birthday gift ideas",
+  "position": 2,
+  "shared": false,
+  "itemCount": 3,
+  "createdAt": "2025-01-22T09:15:00.000Z",
+  "updatedAt": "2025-01-22T09:15:00.000Z"
+}
+```
+
+</details>
+
+---
+
 #### `lists.addItems(listId, body)`
 
 Add one or more items to a list.
@@ -993,23 +1135,28 @@ import type {
   GetGroupsResponse,
   GetGroupResponse,
   GroupSummary,
+  GroupSummaryList,
   GroupDetail,
   GroupDetailList,
+  GroupMutationResponse,
   CreateGroupBody,
   UpdateGroupBody,
   ReorderGroupBody,
+  DuplicateGroupResponse,
 
   // Lists
   GetListsResponse,
   GetListResponse,
   ListSummary,
   ListDetail,
+  ListMutationResponse,
   CreateListBody,
   UpdateListBody,
   AddItemsToListBody,
   UpdateListItemBody,
   ReorderListItemsBody,
   ReorderListItemsResponse,
+  DuplicateListResponse,
 
   // Shared
   GetSharedListResponse,
@@ -1061,9 +1208,21 @@ type GroupSummary = {
   position: number;
   shared: boolean;
   listCount: number;
+  /** Empty unless `includeLists` was requested on `groups.getAll()`. */
+  lists: GroupSummaryList[];
   featuredItems: FeaturedItem[];
   createdAt: string;
   updatedAt: string;
+};
+
+type GroupSummaryList = {
+  id: string;
+  name: string;
+  description: string | null;
+  position: number;
+  shared: boolean;
+  itemCount: number;
+  items: HydratedWishlistItem[];
 };
 ```
 
