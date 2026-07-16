@@ -1,5 +1,20 @@
 # @sdg.la/wishlist-stack-hydrogen
 
+## 0.11.0
+
+### Minor Changes
+
+- [#23](https://github.com/DevTeamApps/wishlist-stack-clients/pull/23) [`cfc51f6`](https://github.com/DevTeamApps/wishlist-stack-clients/commit/cfc51f6abc5d014912b9ca2cb4bbd2dbe60c6d11) Thanks [@n8cotoa](https://github.com/n8cotoa)! - Add groups.getAll includeLists support and group/list duplicate endpoints
+
+### Patch Changes
+
+- [#19](https://github.com/DevTeamApps/wishlist-stack-clients/pull/19) [`523f84d`](https://github.com/DevTeamApps/wishlist-stack-clients/commit/523f84d67862f354668fa925bed70183b68581cc) Thanks [@n8cotoa](https://github.com/n8cotoa)! - README update
+
+- [#19](https://github.com/DevTeamApps/wishlist-stack-clients/pull/19) [`17ec8a8`](https://github.com/DevTeamApps/wishlist-stack-clients/commit/17ec8a82e5190bb8ecefee9ebee95fb4b1d4207c) Thanks [@n8cotoa](https://github.com/n8cotoa)! - README update for latest Hydrogen version
+
+- Updated dependencies [[`cfc51f6`](https://github.com/DevTeamApps/wishlist-stack-clients/commit/cfc51f6abc5d014912b9ca2cb4bbd2dbe60c6d11)]:
+  - @sdg.la/wishlist-stack-sdk@0.11.0
+
 ## 0.10.1
 
 ### Patch Changes
