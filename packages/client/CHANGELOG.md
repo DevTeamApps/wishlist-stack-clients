@@ -1,5 +1,11 @@
 # @sdg.la/wishlist-stack-sdk
 
+## 0.12.0
+
+### Minor Changes
+
+- [#24](https://github.com/DevTeamApps/wishlist-stack-clients/pull/24) [`d5919e6`](https://github.com/DevTeamApps/wishlist-stack-clients/commit/d5919e6b0149bdc915757bd8065a1ee8f51a3e74) Thanks [@tdbunting](https://github.com/tdbunting)! - Add sort options to list queries
+
 ## Unreleased
 
 ### Minor Changes
