@@ -5,7 +5,7 @@ function createLazyWishlistStackClient(getClient: () => Promise<WishlistStackCli
   return {
     lists: {
       getAll: (query) => getClient().then((c) => c.lists.getAll(query)),
-      getById: (listId) => getClient().then((c) => c.lists.getById(listId)),
+      getById: (listId, query) => getClient().then((c) => c.lists.getById(listId, query)),
       create: (body) => getClient().then((c) => c.lists.create(body)),
       update: (listId, body) => getClient().then((c) => c.lists.update(listId, body)),
       remove: (listId) => getClient().then((c) => c.lists.remove(listId)),
@@ -30,8 +30,8 @@ function createLazyWishlistStackClient(getClient: () => Promise<WishlistStackCli
       unshare: (groupId) => getClient().then((c) => c.groups.unshare(groupId)),
     },
     shared: {
-      getSharedList: (listId) => getClient().then((c) => c.shared.getSharedList(listId)),
-      getSharedGroup: (groupId) => getClient().then((c) => c.shared.getSharedGroup(groupId)),
+      getSharedList: (listId, query) => getClient().then((c) => c.shared.getSharedList(listId, query)),
+      getSharedGroup: (groupId, query) => getClient().then((c) => c.shared.getSharedGroup(groupId, query)),
     },
   };
 }

@@ -39,6 +39,23 @@ describe("groups resource", () => {
     expect(String(call.input)).toBe("https://example.test/api/groups?page=2&pageSize=10");
   });
 
+  it("supports sort query params for groups.getAll()", async () => {
+    const mock = createMockFetch();
+    const client = createWishlistStackClient({
+      baseUrl: "https://example.test",
+      apiKey: "k",
+      customerAccessToken: "t",
+      fetch: mock.fetch,
+    });
+
+    await client.groups.getAll({ sortBy: "updatedAt", sortDirection: "desc" });
+
+    const call = mock.lastCall()!;
+    expect(String(call.input)).toBe(
+      "https://example.test/api/groups?sortBy=updatedAt&sortDirection=desc",
+    );
+  });
+
   it("normalizes includeLists to includeLists=1 for groups.getAll()", async () => {
     const mock = createMockFetch();
     const client = createWishlistStackClient({

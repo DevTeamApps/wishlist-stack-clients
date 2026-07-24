@@ -54,6 +54,8 @@ export type HydratedWishlistItem = {
   position: number;
   product: HydratedProduct;
   properties?: Record<string, unknown> | null;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type ListSummary = {
