@@ -1,5 +1,12 @@
 # @sdg.la/wishlist-stack-sdk
 
+## Unreleased
+
+### Minor Changes
+
+- Add `sortBy` / `sortDirection` query support on collection endpoints (`groups`, `lists`, and `shared`)
+- Expose `createdAt` / `updatedAt` on hydrated items and nested list summaries
+
 ## 0.11.0
 
 ### Minor Changes

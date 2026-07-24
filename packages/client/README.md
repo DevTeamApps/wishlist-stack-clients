@@ -19,6 +19,7 @@ TypeScript/JavaScript SDK for the Wishlist Stack API.
   - [Class API](#class-api)
 - [Error Handling](#error-handling)
 - [Pagination](#pagination)
+- [Sorting](#sorting)
 - [API Reference](#api-reference)
   - [Groups](#groups)
   - [Lists](#lists)
@@ -35,6 +36,7 @@ TypeScript/JavaScript SDK for the Wishlist Stack API.
 - **Flexible API** — Choose between functional `createWishlistStackClient()` or class-based `new WishlistStackClient()`
 - **Built-in error handling** — Structured `WishlistStackApiError` with status codes and API error messages
 - **Pagination support** — All list endpoints support `page` and `pageSize` parameters
+- **Sort support** — Collection endpoints accept `sortBy` (`position` | `createdAt` | `updatedAt`) and `sortDirection` (`asc` | `desc`)
 
 ## Requirements
 
@@ -206,6 +208,24 @@ await client.lists.getById('list-id', { page: 1, pageSize: 25 });
 }
 ```
 
+## Sorting
+
+Collection endpoints accept optional sort parameters. Defaults match historical behavior (`sortBy=position`, `sortDirection=asc`). Sorting applies only to the primary collection returned by the endpoint.
+
+```ts
+// Recently updated groups first
+await client.groups.getAll({ sortBy: 'updatedAt', sortDirection: 'desc' });
+
+// Newest lists first
+await client.lists.getAll({ sortBy: 'createdAt', sortDirection: 'desc' });
+
+// Sort items in a list by updatedAt
+await client.lists.getById('list-id', { sortBy: 'updatedAt', sortDirection: 'desc' });
+
+// Shared endpoints support the same params
+await client.shared.getSharedList('list-id', { sortBy: 'createdAt', sortDirection: 'asc' });
+```
+
 ## API Reference
 
 ### Groups
@@ -219,13 +239,13 @@ await client.lists.getById('list-id', { page: 1, pageSize: 25 });
 Fetch all groups for the authenticated customer.
 
 - **Endpoint:** `GET /api/groups`
-- **Parameters:** `query?` — `{ page?: number; pageSize?: number; query?: string; includeLists?: boolean | 1 | "1" }`
+- **Parameters:** `query?` — `{ page?: number; pageSize?: number; query?: string; includeLists?: boolean | 1 | "1"; sortBy?: 'position' | 'createdAt' | 'updatedAt'; sortDirection?: 'asc' | 'desc' }`
 - **Returns:** `Promise<GetGroupsResponse>`
 
 Pass `includeLists: true` (sent as `includeLists=1`) to embed every list under each group with fully hydrated items — useful for loading projects/boards in one call instead of per-group `getById` fan-out. Without it, `lists` is an empty array and only `featuredItems` are populated.
 
 ```ts
-const { groups, pagination } = await client.groups.getAll({ page: 1, pageSize: 10, query: 'holiday' });
+const { groups, pagination } = await client.groups.getAll({ page: 1, pageSize: 10, query: 'holiday', sortBy: 'updatedAt', sortDirection: 'desc' });
 
 // Include lists + hydrated items
 const { groups: withLists } = await client.groups.getAll({ includeLists: true });
@@ -349,11 +369,11 @@ Fetch a single group by ID. Lists within the group are paginated.
 - **Endpoint:** `GET /api/groups/{groupId}`
 - **Parameters:**
   - `groupId` — `string`
-  - `query?` — `{ page?: number; pageSize?: number, query?: string }`
+  - `query?` — `{ page?: number; pageSize?: number; query?: string; sortBy?: 'position' | 'createdAt' | 'updatedAt'; sortDirection?: 'asc' | 'desc' }`
 - **Returns:** `Promise<GetGroupResponse>`
 
 ```ts
-const group = await client.groups.getById('group-id', { page: 1, pageSize: 25, query: 'gift' });
+const group = await client.groups.getById('group-id', { page: 1, pageSize: 25, query: 'gift', sortBy: 'updatedAt', sortDirection: 'desc' });
 ```
 
 <details>
@@ -613,11 +633,11 @@ await client.groups.unshare('group-id');
 Fetch all lists for the authenticated customer.
 
 - **Endpoint:** `GET /api/lists`
-- **Parameters:** `query?` — `{ page?: number; pageSize?: number, query?: string }`
+- **Parameters:** `query?` — `{ page?: number; pageSize?: number; query?: string; sortBy?: 'position' | 'createdAt' | 'updatedAt'; sortDirection?: 'asc' | 'desc' }`
 - **Returns:** `Promise<GetListsResponse>`
 
 ```ts
-const { lists, pagination } = await client.lists.getAll({ page: 1, pageSize: 10 });
+const { lists, pagination } = await client.lists.getAll({ page: 1, pageSize: 10, sortBy: 'updatedAt', sortDirection: 'desc' });
 ```
 
 <details>
@@ -668,11 +688,11 @@ Fetch a single list by ID. Items are hydrated with Shopify product data and pagi
 - **Endpoint:** `GET /api/lists/{listId}`
 - **Parameters:**
   - `listId` — `string`
-  - `query?` — `{ page?: number; pageSize?: number }`
+  - `query?` — `{ page?: number; pageSize?: number; sortBy?: 'position' | 'createdAt' | 'updatedAt'; sortDirection?: 'asc' | 'desc' }`
 - **Returns:** `Promise<GetListResponse>`
 
 ```ts
-const list = await client.lists.getById('list-id', { page: 1, pageSize: 25 });
+const list = await client.lists.getById('list-id', { page: 1, pageSize: 25, sortBy: 'updatedAt', sortDirection: 'desc' });
 ```
 
 <details>
@@ -1091,30 +1111,34 @@ Public read-only endpoints for accessing shared lists and groups. These require 
 
 ---
 
-#### `shared.getSharedList(listId)`
+#### `shared.getSharedList(listId, query?)`
 
 Fetch a public shared list with hydrated product details.
 
 - **Endpoint:** `GET /api/shared/list/{listId}`
-- **Parameters:** `listId` — `string`
+- **Parameters:**
+  - `listId` — `string`
+  - `query?` — `{ page?: number; pageSize?: number; sortBy?: 'position' | 'createdAt' | 'updatedAt'; sortDirection?: 'asc' | 'desc' }`
 - **Returns:** `Promise<GetSharedListResponse>` — same response shape as [`lists.getById`](#listsgetbyidlistid-query)
 
 ```ts
-const list = await client.shared.getSharedList('list-id');
+const list = await client.shared.getSharedList('list-id', { sortBy: 'updatedAt', sortDirection: 'desc' });
 ```
 
 ---
 
-#### `shared.getSharedGroup(groupId)`
+#### `shared.getSharedGroup(groupId, query?)`
 
 Fetch a public shared group and its lists.
 
 - **Endpoint:** `GET /api/shared/group/{groupId}`
-- **Parameters:** `groupId` — `string`
+- **Parameters:**
+  - `groupId` — `string`
+  - `query?` — `{ page?: number; pageSize?: number; query?: string; sortBy?: 'position' | 'createdAt' | 'updatedAt'; sortDirection?: 'asc' | 'desc' }`
 - **Returns:** `Promise<GetSharedGroupResponse>` — same response shape as [`groups.getById`](#groupsgetbyidgroupid-query)
 
 ```ts
-const group = await client.shared.getSharedGroup('group-id');
+const group = await client.shared.getSharedGroup('group-id', { sortBy: 'createdAt', sortDirection: 'asc' });
 ```
 
 ## TypeScript Types

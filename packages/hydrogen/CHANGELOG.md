@@ -1,5 +1,11 @@
 # @sdg.la/wishlist-stack-hydrogen
 
+## Unreleased
+
+### Patch Changes
+
+- Forward `lists.getById` and shared collection query params (including sort) through the Hydrogen lazy client wrapper
+
 ## 0.11.0
 
 ### Minor Changes

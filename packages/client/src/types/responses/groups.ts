@@ -16,6 +16,8 @@ export type GroupSummaryList = {
   position: number;
   shared: boolean;
   itemCount: number;
+  createdAt: string;
+  updatedAt: string;
   items: HydratedWishlistItem[];
 };
 
@@ -45,6 +47,8 @@ export type GroupDetailList = {
   description: string | null;
   isShared: boolean;
   itemCount: number;
+  createdAt: string;
+  updatedAt: string;
   items: string[];
   featuredItems: FeaturedItem[];
 };
