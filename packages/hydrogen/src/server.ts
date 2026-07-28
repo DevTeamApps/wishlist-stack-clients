@@ -9,7 +9,7 @@ function createLazyWishlistStackClient(getClient: () => Promise<WishlistStackCli
       create: (body) => getClient().then((c) => c.lists.create(body)),
       update: (listId, body) => getClient().then((c) => c.lists.update(listId, body)),
       remove: (listId) => getClient().then((c) => c.lists.remove(listId)),
-      duplicate: (listId) => getClient().then((c) => c.lists.duplicate(listId)),
+      duplicate: (listId, body) => getClient().then((c) => c.lists.duplicate(listId, body)),
       addItems: (listId, body) => getClient().then((c) => c.lists.addItems(listId, body)),
       updateItem: (listId, itemId, body) => getClient().then((c) => c.lists.updateItem(listId, itemId, body)),
       removeItem: (listId, itemId) => getClient().then((c) => c.lists.removeItem(listId, itemId)),

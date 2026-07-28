@@ -31,3 +31,8 @@ export type ReorderListItemsBody = {
   items: Array<{ id: string; position: number }>;
 };
 
+export type DuplicateListBody = {
+  /** Destination group. Omit to keep source group; `null` to ungroup. */
+  groupId?: string | null;
+};
+
