@@ -1,5 +1,16 @@
 # @sdg.la/wishlist-stack-hydrogen
 
+## 0.13.0
+
+### Minor Changes
+
+- [#26](https://github.com/DevTeamApps/wishlist-stack-clients/pull/26) [`5354838`](https://github.com/DevTeamApps/wishlist-stack-clients/commit/53548388e60599285d9ce7812cd407402fb79c94) Thanks [@n8cotoa](https://github.com/n8cotoa)! - Add optional groupId body to lists.duplicate for cross-project and ungrouped copies
+
+### Patch Changes
+
+- Updated dependencies [[`5354838`](https://github.com/DevTeamApps/wishlist-stack-clients/commit/53548388e60599285d9ce7812cd407402fb79c94)]:
+  - @sdg.la/wishlist-stack-sdk@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes
