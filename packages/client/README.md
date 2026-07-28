@@ -846,16 +846,25 @@ await client.lists.remove('list-id');
 
 ---
 
-#### `lists.duplicate(listId)`
+#### `lists.duplicate(listId, body?)`
 
-Duplicate a list in a single call, including all of its items. The copy stays in the same group (if any), is named `Copy of {original name}`, and is not shared.
+Duplicate a list in a single call, including all of its items (notes and custom `properties` preserved). By default the copy stays in the same group as the source. Pass an optional body to place it in another group or leave it ungrouped. The copy is named `Copy of {original name}` and is not shared.
 
 - **Endpoint:** `POST /api/lists/{listId}/duplicate`
-- **Parameters:** `listId` — `string`
+- **Parameters:**
+  - `listId` — `string`
+  - `body?` — `DuplicateListBody` (`{ groupId?: string | null }`)
 - **Returns:** `Promise<DuplicateListResponse>`
 
 ```ts
+// Same group as source (default)
 const copy = await client.lists.duplicate('list-id');
+
+// Place copy in another group (cross-project)
+const crossProject = await client.lists.duplicate('list-id', { groupId: 'other-group-id' });
+
+// Leave copy ungrouped
+const ungrouped = await client.lists.duplicate('list-id', { groupId: null });
 ```
 
 <details>
@@ -1180,6 +1189,7 @@ import type {
   UpdateListItemBody,
   ReorderListItemsBody,
   ReorderListItemsResponse,
+  DuplicateListBody,
   DuplicateListResponse,
 
   // Shared

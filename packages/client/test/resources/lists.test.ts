@@ -53,6 +53,23 @@ describe("lists resource", () => {
     const call = mock.lastCall()!;
     expect(String(call.input)).toBe("https://example.test/api/lists/l_1/duplicate");
     expect(call.init?.method).toBe("POST");
+    expect(call.init?.body).toBeUndefined();
+  });
+
+  it("sends optional groupId body for lists.duplicate()", async () => {
+    const mock = createMockFetch();
+    const client = createWishlistStackClient({
+      baseUrl: "https://example.test",
+      apiKey: "k",
+      customerAccessToken: "t",
+      fetch: mock.fetch,
+    });
+
+    await client.lists.duplicate("l_1", { groupId: "g_2" });
+    expect(mock.lastCall()!.init?.body).toBe(JSON.stringify({ groupId: "g_2" }));
+
+    await client.lists.duplicate("l_1", { groupId: null });
+    expect(mock.lastCall()!.init?.body).toBe(JSON.stringify({ groupId: null }));
   });
 });
 

@@ -3,6 +3,7 @@ import type { PaginatedQuery } from "../../types/query-options";
 import type {
   AddItemsToListBody,
   CreateListBody,
+  DuplicateListBody,
   ReorderListItemsBody,
   UpdateListBody,
   UpdateListItemBody,
@@ -77,14 +78,16 @@ export function createListsResource(request: RequestFn) {
 
     /**
      * Duplicate a list (including all items) in a single call.
-     * The copy stays in the same group (if any), is named `Copy of {original name}`,
-     * and is not shared.
+     * By default the copy stays in the same group as the source. Pass `groupId`
+     * to place it in another group, or `groupId: null` to leave it ungrouped.
+     * The copy is named `Copy of {original name}` and is not shared.
      */
-    duplicate: (listId: string) =>
-      request<DuplicateListResponse>({
+    duplicate: (listId: string, body?: DuplicateListBody) =>
+      request<DuplicateListResponse, DuplicateListBody>({
         method: "POST",
         path: `/api/lists/${encodeURIComponent(listId)}/duplicate`,
         auth: "authenticated",
+        body,
       }),
 
     /** Add one or more items to a list. */
