@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { createWishlistStackClient } from "../../src/client/createWishlistStackClient";
 import { createMockFetch } from "../helpers/mockFetch";
+import {
+  isAddItemsDeltaResponse,
+  isAddItemsLegacyResponse,
+} from "../../src/types/guards";
+import { clampPageSize } from "../../src/helpers/pagination";
 
 describe("lists resource", () => {
   it("supports pagination query params for lists.getById() (paginate items under list)", async () => {
@@ -71,5 +76,177 @@ describe("lists resource", () => {
     await client.lists.duplicate("l_1", { groupId: null });
     expect(mock.lastCall()!.init?.body).toBe(JSON.stringify({ groupId: null }));
   });
+
+  it("types getById responses that include pagination", async () => {
+    const mock = createMockFetch();
+    mock.setResponder(
+      () =>
+        new Response(
+          JSON.stringify({
+            id: "l_1",
+            name: "Wishlist",
+            description: null,
+            position: 1,
+            shared: false,
+            itemCount: 2,
+            createdAt: "2026-01-01T00:00:00.000Z",
+            updatedAt: "2026-01-01T00:00:00.000Z",
+            items: [{ id: "i1", quantity: 1, position: 1, product: {}, createdAt: "", updatedAt: "" }],
+            pagination: { page: 1, pageSize: 25, totalCount: 2, totalPages: 1 },
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        ),
+    );
+
+    const client = createWishlistStackClient({
+      baseUrl: "https://example.test",
+      apiKey: "k",
+      customerAccessToken: "t",
+      fetch: mock.fetch,
+    });
+
+    const res = await client.lists.getById("l_1");
+    expect(res.pagination?.pageSize).toBe(25);
+    expect(res.items).toHaveLength(1);
+  });
+
+  it("distinguishes addItems delta vs legacy responses with type guards", async () => {
+    const mock = createMockFetch();
+    const client = createWishlistStackClient({
+      baseUrl: "https://example.test",
+      apiKey: "k",
+      customerAccessToken: "t",
+      fetch: mock.fetch,
+    });
+
+    mock.setResponder(
+      () =>
+        new Response(
+          JSON.stringify({
+            listId: "l_1",
+            addedItems: [{ id: "i1", quantity: 1, position: 1, product: {}, createdAt: "", updatedAt: "" }],
+            addedCount: 1,
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        ),
+    );
+    const delta = await client.lists.addItems("l_1", { items: [{ variantId: "v1" }] });
+    expect(isAddItemsDeltaResponse(delta)).toBe(true);
+    expect(isAddItemsLegacyResponse(delta)).toBe(false);
+
+    mock.setResponder(
+      () =>
+        new Response(
+          JSON.stringify({
+            id: "l_1",
+            name: "Wishlist",
+            description: null,
+            position: 1,
+            shared: false,
+            itemCount: 1,
+            createdAt: "",
+            updatedAt: "",
+            items: [{ id: "i1", quantity: 1, position: 1, product: {}, createdAt: "", updatedAt: "" }],
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        ),
+    );
+    const legacy = await client.lists.addItems("l_1", { items: [{ variantId: "v1" }] });
+    expect(isAddItemsLegacyResponse(legacy)).toBe(true);
+    expect(isAddItemsDeltaResponse(legacy)).toBe(false);
+  });
+
+  it("addItemsBatched splits 30 items into 25+5 POSTs and merges delta responses", async () => {
+    const mock = createMockFetch();
+    let callCount = 0;
+    mock.setResponder((call) => {
+      callCount += 1;
+      const body = JSON.parse(String(call.init?.body ?? "{}")) as { items?: unknown[] };
+      const n = body.items?.length ?? 0;
+      return new Response(
+        JSON.stringify({
+          listId: "l_1",
+          addedItems: Array.from({ length: n }, (_, i) => ({
+            id: `i_${callCount}_${i}`,
+            quantity: 1,
+            position: i,
+            product: {},
+            createdAt: "",
+            updatedAt: "",
+          })),
+          addedCount: n,
+        }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      );
+    });
+
+    const client = createWishlistStackClient({
+      baseUrl: "https://example.test",
+      apiKey: "k",
+      customerAccessToken: "t",
+      fetch: mock.fetch,
+    });
+
+    const items = Array.from({ length: 30 }, (_, i) => ({ variantId: `v_${i}` }));
+    const res = await client.lists.addItemsBatched("l_1", { items });
+
+    expect(mock.calls).toHaveLength(2);
+    const bodies = mock.calls.map((c) => JSON.parse(String(c.init?.body ?? "{}")));
+    expect(bodies[0].items).toHaveLength(25);
+    expect(bodies[1].items).toHaveLength(5);
+    expect(isAddItemsDeltaResponse(res)).toBe(true);
+    if (isAddItemsDeltaResponse(res)) {
+      expect(res.addedCount).toBe(30);
+      expect(res.addedItems).toHaveLength(30);
+    }
+  });
+
+  it("getByIdAllItems follows pagination across two pages", async () => {
+    const mock = createMockFetch();
+    mock.setResponder((call) => {
+      const url = String(call.input);
+      const page = Number(new URL(url).searchParams.get("page") ?? "1");
+      const items =
+        page === 1
+          ? [{ id: "i1", quantity: 1, position: 1, product: {}, createdAt: "", updatedAt: "" }]
+          : [{ id: "i2", quantity: 1, position: 2, product: {}, createdAt: "", updatedAt: "" }];
+      return new Response(
+        JSON.stringify({
+          id: "l_1",
+          name: "Wishlist",
+          description: null,
+          position: 1,
+          shared: false,
+          itemCount: 2,
+          createdAt: "",
+          updatedAt: "",
+          items,
+          pagination: { page, pageSize: 1, totalCount: 2, totalPages: 2 },
+        }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      );
+    });
+
+    const client = createWishlistStackClient({
+      baseUrl: "https://example.test",
+      apiKey: "k",
+      customerAccessToken: "t",
+      fetch: mock.fetch,
+    });
+
+    const res = await client.lists.getByIdAllItems("l_1", { pageSize: 1 });
+    expect(mock.calls).toHaveLength(2);
+    expect(res.items.map((i) => i.id)).toEqual(["i1", "i2"]);
+    expect(res.pagination?.totalPages).toBe(2);
+  });
 });
 
+describe("clampPageSize", () => {
+  it("never emits pageSize > 25", () => {
+    expect(clampPageSize(100)).toBe(25);
+    expect(clampPageSize(0)).toBe(1);
+    expect(clampPageSize(-3)).toBe(1);
+    expect(clampPageSize(12.9)).toBe(12);
+    expect(clampPageSize(Number.NaN)).toBe(25);
+  });
+});

@@ -34,8 +34,9 @@ TypeScript/JavaScript SDK for the Wishlist Stack API.
 - **TypeScript-first** — Full type definitions with exported types for all requests and responses
 - **Universal** — Works in Node.js, browsers, and edge runtimes (Cloudflare Workers, Deno, etc.)
 - **Flexible API** — Choose between functional `createWishlistStackClient()` or class-based `new WishlistStackClient()`
-- **Built-in error handling** — Structured `WishlistStackApiError` with status codes and API error messages
-- **Pagination support** — All list endpoints support `page` and `pageSize` parameters
+- **Built-in error handling** — Structured `WishlistStackApiError` with status codes, `Retry-After` / rate-limit headers, and API error messages
+- **Pagination support** — List endpoints support `page` and `pageSize` (max **25**); helpers fetch all pages when needed
+- **Batch helpers** — `lists.addItemsBatched` chunks adds to the max of 25 items per request
 - **Sort support** — Collection endpoints accept `sortBy` (`position` | `createdAt` | `updatedAt`) and `sortDirection` (`asc` | `desc`)
 
 ## Requirements
@@ -65,6 +66,9 @@ import { createWishlistStackClient } from '@sdg.la/wishlist-stack-sdk';
 const client = createWishlistStackClient({
   apiKey: 'your-merchant-api-key',
   customerAccessToken: 'customer-access-token', // required for authenticated endpoints
+  // optional:
+  // defaultTimeoutMs: 10_000,
+  // retryOnRateLimit: true, // single retry with jitter on HTTP 429
 });
 
 // Fetch all groups
@@ -72,6 +76,35 @@ const { groups } = await client.groups.getAll();
 
 // Fetch all lists
 const { lists } = await client.lists.getAll();
+```
+
+### Pagination, batching, and add responses
+
+The API paginates list detail (max `pageSize` **25**) and may return either a full list or an add **delta**. Use the helpers and type guards so storefronts work against both response shapes:
+
+| Concern | Guidance |
+|---------|----------|
+| List detail | Prefer `page` / `pageSize` ≤ 25, or `lists.getByIdAllItems` for every item |
+| Adding many items | Use `lists.addItemsBatched` (chunks of ≤ 25) |
+| Add response | Delta `{ listId, addedItems, addedCount }` or full list — narrow with `isAddItemsDeltaResponse` |
+| Create + items | Do not send `variantIds` on create; create the list, then `addItems` |
+| `quantity` on add | Supported **1–999** (some deployments may still store `1`) |
+| `includeLists` | Cap of **10 lists × 25 items**; use `getById` helpers for full data |
+| Groups | May return **503** until enabled for the merchant |
+
+```ts
+import {
+  isAddItemsDeltaResponse,
+  clampPageSize,
+} from '@sdg.la/wishlist-stack-sdk';
+
+const res = await client.lists.addItemsBatched(id, { items: many });
+if (isAddItemsDeltaResponse(res)) {
+  // res.addedItems / res.addedCount — then refresh if needed:
+  const full = await client.lists.getByIdAllItems(id, {
+    pageSize: clampPageSize(25),
+  });
+}
 ```
 
 ## Usage
@@ -175,26 +208,38 @@ try {
     console.log(error.apiErrors);        // Array of { message, field? }
     console.log(error.apiErrorMessages); // Array of error message strings
     console.log(error.requestId);        // Request ID for debugging
+    console.log(error.retryAfter);       // Retry-After header (429)
+    console.log(error.rateLimit);        // X-RateLimit-* headers when present
   }
 }
 ```
 
+Groups endpoints may return **503** with message `Groups API disabled for this merchant` until the Groups API is enabled.
+
 ## Pagination
 
-Endpoints that return lists support pagination via query parameters:
+Endpoints that return lists support pagination via query parameters. Keep `pageSize` in **1–25** (use `clampPageSize()`). Prefer `lists.getByIdAllItems()` when you need every item.
 
 ```ts
+import { clampPageSize } from '@sdg.la/wishlist-stack-sdk';
+
 // Paginate groups
 await client.groups.getAll({ page: 2, pageSize: 10 });
 
-// Include lists + hydrated items on groups.getAll
+// includeLists is capped at 10 lists × 25 items
 await client.groups.getAll({ includeLists: true });
 
 // Paginate lists within a group
 await client.groups.getById('group-id', { page: 1, pageSize: 25 });
 
 // Paginate items within a list
-await client.lists.getById('list-id', { page: 1, pageSize: 25 });
+await client.lists.getById('list-id', {
+  page: 1,
+  pageSize: clampPageSize(25),
+});
+
+// Or fetch every page:
+await client.lists.getByIdAllItems('list-id', { pageSize: 25 });
 ```
 
 **Pagination response structure:**
@@ -242,7 +287,7 @@ Fetch all groups for the authenticated customer.
 - **Parameters:** `query?` — `{ page?: number; pageSize?: number; query?: string; includeLists?: boolean | 1 | "1"; sortBy?: 'position' | 'createdAt' | 'updatedAt'; sortDirection?: 'asc' | 'desc' }`
 - **Returns:** `Promise<GetGroupsResponse>`
 
-Pass `includeLists: true` (sent as `includeLists=1`) to embed every list under each group with fully hydrated items — useful for loading projects/boards in one call instead of per-group `getById` fan-out. Without it, `lists` is an empty array and only `featuredItems` are populated.
+Pass `includeLists: true` (sent as `includeLists=1`) to embed lists under each group with hydrated items. Expect at most **10 lists × 25 items** per group — use `groups.getById` + `lists.getById` / `lists.getByIdAllItems` for full data. Without `includeLists`, `lists` is an empty array and only `featuredItems` are populated. Groups may return **503** until enabled for the merchant.
 
 ```ts
 const { groups, pagination } = await client.groups.getAll({ page: 1, pageSize: 10, query: 'holiday', sortBy: 'updatedAt', sortDirection: 'desc' });
@@ -544,18 +589,17 @@ const copy = await client.groups.duplicate('group-id');
 
 ---
 
-#### `groups.reorder(groupId, body)`
+#### `groups.reorder(body)`
 
-Reorder lists within a group.
+Reorder the customer's groups.
 
-- **Endpoint:** `POST /api/groups/{groupId}/reorder`
+- **Endpoint:** `POST /api/groups/reorder`
 - **Parameters:**
-  - `groupId` — `string`
-  - `body` — `{ listIds?: string[] }`
-- **Returns:** `Promise<ReorderGroupResponse>`
+  - `body` — `{ groupIds: string[] }` (group CUIDs in the desired order)
+- **Returns:** `Promise<ReorderGroupsResponse>`
 
 ```ts
-await client.groups.reorder('group-id', { listIds: ['list-3', 'list-1', 'list-2'] });
+await client.groups.reorder({ groupIds: ['group-3', 'group-1', 'group-2'] });
 ```
 
 ---
@@ -683,16 +727,17 @@ const { lists, pagination } = await client.lists.getAll({ page: 1, pageSize: 10,
 
 #### `lists.getById(listId, query?)`
 
-Fetch a single list by ID. Items are hydrated with Shopify product data and paginated.
+Fetch a single list by ID. Items are hydrated with Shopify product data and may be paginated. When paginated, the response includes `pagination` (max `pageSize` **25**).
 
 - **Endpoint:** `GET /api/lists/{listId}`
 - **Parameters:**
   - `listId` — `string`
   - `query?` — `{ page?: number; pageSize?: number; sortBy?: 'position' | 'createdAt' | 'updatedAt'; sortDirection?: 'asc' | 'desc' }`
-- **Returns:** `Promise<GetListResponse>`
+- **Returns:** `Promise<GetListResponse>` (`ListDetail & { pagination?: Pagination }`)
 
 ```ts
 const list = await client.lists.getById('list-id', { page: 1, pageSize: 25, sortBy: 'updatedAt', sortDirection: 'desc' });
+// list.pagination?.totalPages when the API returns pagination
 ```
 
 <details>
@@ -757,9 +802,19 @@ const list = await client.lists.getById('list-id', { page: 1, pageSize: 25, sort
 
 ---
 
+#### `lists.getByIdAllItems(listId, opts?)`
+
+Walk every page of `lists.getById` and return one list with all items concatenated. Use when you need the full wishlist and list detail is paginated.
+
+```ts
+const full = await client.lists.getByIdAllItems('list-id', { pageSize: 25 });
+```
+
+---
+
 #### `lists.create(body)`
 
-Create a new list, optionally assigned to a group.
+Create a new list, optionally assigned to a group. Do **not** send `variantIds` on create (the API may reject them). Create the list, then call `addItems` / `addItemsBatched`.
 
 - **Endpoint:** `POST /api/lists`
 - **Parameters:** `body` — `{ name?: string; description?: string; groupId?: string }`
@@ -767,6 +822,9 @@ Create a new list, optionally assigned to a group.
 
 ```ts
 const list = await client.lists.create({ name: 'Gift Ideas', groupId: 'group-id' });
+await client.lists.addItems(list.id, {
+  items: [{ variantId: 'gid://shopify/ProductVariant/123', quantity: 2 }],
+});
 ```
 
 <details>
@@ -889,7 +947,7 @@ const ungrouped = await client.lists.duplicate('list-id', { groupId: null });
 
 #### `lists.addItems(listId, body)`
 
-Add one or more items to a list.
+Add one or more items to a list. Prefer `lists.addItemsBatched` when sending more than **25** items.
 
 - **Endpoint:** `POST /api/lists/{listId}/add`
 - **Parameters:**
@@ -900,6 +958,7 @@ Add one or more items to a list.
 type AddItemsToListBody = {
   items?: Array<{
     variantId?: string;
+    /** Supported range 1–999 (some deployments may still store 1). */
     quantity?: number;
     note?: string;
     properties?: Record<string, unknown> | null;
@@ -907,15 +966,33 @@ type AddItemsToListBody = {
 };
 ```
 
-- **Returns:** `Promise<AddItemsToListResponse>` — the updated list with hydrated items (same shape as `getById`)
+- **Returns:** `Promise<AddItemsToListResponse>` — either:
+  - Delta: `{ listId, addedItems, addedCount }`
+  - Full list (same shape as `getById`)
+
+Use `isAddItemsDeltaResponse` / `isAddItemsLegacyResponse` to narrow.
 
 ```ts
-await client.lists.addItems('list-id', {
+import { isAddItemsDeltaResponse } from '@sdg.la/wishlist-stack-sdk';
+
+const res = await client.lists.addItems('list-id', {
   items: [
     { variantId: 'gid://shopify/ProductVariant/123', quantity: 1 },
     { variantId: 'gid://shopify/ProductVariant/456', note: 'Size M' },
   ],
 });
+
+if (isAddItemsDeltaResponse(res)) {
+  console.log(res.addedCount, res.addedItems);
+}
+```
+
+#### `lists.addItemsBatched(listId, body, opts?)`
+
+Chunks `items` into sequential POSTs of ≤25 (configurable via `opts.batchSize`) and merges delta responses when present.
+
+```ts
+const res = await client.lists.addItemsBatched('list-id', { items: many });
 ```
 
 ---
@@ -1163,6 +1240,12 @@ import type {
   // Errors
   WishlistStackApiError,
   WishlistStackApiErrorDetails,
+  isWishlistStackApiError,
+
+  // Helpers
+  clampPageSize,
+  isAddItemsDeltaResponse,
+  isAddItemsLegacyResponse,
 
   // Groups
   GetGroupsResponse,
@@ -1174,7 +1257,9 @@ import type {
   GroupMutationResponse,
   CreateGroupBody,
   UpdateGroupBody,
+  ReorderGroupsBody,
   ReorderGroupBody,
+  ReorderGroupsResponse,
   DuplicateGroupResponse,
 
   // Lists
@@ -1186,6 +1271,9 @@ import type {
   CreateListBody,
   UpdateListBody,
   AddItemsToListBody,
+  AddItemsToListResponse,
+  AddItemsToListDeltaResponse,
+  AddItemsToListLegacyResponse,
   UpdateListItemBody,
   ReorderListItemsBody,
   ReorderListItemsResponse,

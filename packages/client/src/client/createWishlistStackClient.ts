@@ -9,6 +9,10 @@ export type CreateWishlistStackClientOptions = {
   apiKey: string;
   customerAccessToken?: string;
   fetch?: FetchLike;
+  /** Default request timeout in ms when a call does not pass `timeoutMs`. */
+  defaultTimeoutMs?: number;
+  /** When true, retry once on HTTP 429 with jittered backoff (default: false). */
+  retryOnRateLimit?: boolean;
 };
 
 export type WishlistStackClient = {
@@ -44,6 +48,8 @@ export function createWishlistStackClient(opts: CreateWishlistStackClientOptions
     apiKey: opts.apiKey,
     customerAccessToken: opts.customerAccessToken,
     fetch: fetchImpl,
+    defaultTimeoutMs: opts.defaultTimeoutMs,
+    retryOnRateLimit: opts.retryOnRateLimit,
   });
 
   return {

@@ -7,7 +7,8 @@ export type { FeaturedItem, Image, OkResponse, Pagination } from "./common";
 
 /**
  * List embedded on a group when `includeLists=1` is passed to `groups.getAll()`.
- * Items are fully hydrated (same shape as `lists.getById`).
+ * Items are hydrated (same shape as `lists.getById` items).
+ * Expect at most **10 lists × 25 items** per group.
  */
 export type GroupSummaryList = {
   id: string;
@@ -28,7 +29,10 @@ export type GroupSummary = {
   position: number;
   shared: boolean;
   listCount: number;
-  /** Empty unless `includeLists=1` was requested. */
+  /**
+   * Empty unless `includeLists=1` was requested.
+   * Cap: 10 lists × 25 items each.
+   */
   lists: GroupSummaryList[];
   featuredItems: FeaturedItem[];
   createdAt: string;
@@ -83,7 +87,11 @@ export type CreateGroupResponse = GroupMutationResponse;
 export type DuplicateGroupResponse = GroupMutationResponse;
 export type UpdateGroupDetailsResponse = GroupMutationResponse;
 export type RemoveGroupResponse = OkResponse;
-export type ReorderGroupResponse = unknown;
+export type ReorderGroupsResponse = {
+  updated: Array<{ id: string; position: number }>;
+};
+/** @deprecated Prefer `ReorderGroupsResponse`. */
+export type ReorderGroupResponse = ReorderGroupsResponse;
 export type MarkGroupSharedResponse = GroupMutationResponse;
 export type RevokeGroupSharedResponse = GroupMutationResponse;
 

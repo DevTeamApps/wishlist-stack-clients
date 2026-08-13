@@ -80,8 +80,10 @@ export type GetListsResponse = {
   pagination: Pagination;
 };
 
-/** GET `/api/lists/:listId` */
-export type GetListResponse = ListDetail;
+/** GET `/api/lists/:listId` — may include `pagination` when the API paginates items. */
+export type GetListResponse = ListDetail & {
+  pagination?: Pagination;
+};
 
 export type ListMutationResponse = Omit<ListSummary, "featuredProducts">;
 
@@ -89,7 +91,21 @@ export type CreateListResponse = ListMutationResponse;
 export type DuplicateListResponse = ListMutationResponse;
 export type UpdateListDetailsResponse = ListMutationResponse;
 export type RemoveListResponse = OkResponse;
-export type AddItemsToListResponse = unknown;
+
+/** Add response that returns only the newly added items. */
+export type AddItemsToListDeltaResponse = {
+  listId: string;
+  addedItems: HydratedWishlistItem[];
+  addedCount: number;
+};
+
+/** Add response that returns the full list (same shape as `getById`). */
+export type AddItemsToListLegacyResponse = ListDetail;
+
+export type AddItemsToListResponse =
+  | AddItemsToListDeltaResponse
+  | AddItemsToListLegacyResponse;
+
 export type UpdateListItemResponse = unknown;
 export type RemoveItemFromListResponse = OkResponse;
 export type ReorderListItemsResponse = {

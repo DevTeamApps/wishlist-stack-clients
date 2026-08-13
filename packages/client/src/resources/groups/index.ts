@@ -1,5 +1,5 @@
 import type { RequestArgs } from "../../client/request";
-import type { CreateGroupBody, ReorderGroupBody, UpdateGroupBody } from "../../types/requests/groups";
+import type { CreateGroupBody, ReorderGroupsBody, UpdateGroupBody } from "../../types/requests/groups";
 import type { PaginatedQuery } from "../../types/query-options";
 import type {
   CreateGroupResponse,
@@ -8,7 +8,7 @@ import type {
   GetGroupsResponse,
   MarkGroupSharedResponse,
   RemoveGroupResponse,
-  ReorderGroupResponse,
+  ReorderGroupsResponse,
   RevokeGroupSharedResponse,
   UpdateGroupDetailsResponse,
 } from "../../types/responses/groups";
@@ -19,8 +19,12 @@ type RequestFn = <TResponse = unknown, TBody = unknown>(
 
 export type GetGroupsQuery = PaginatedQuery<{
   /**
-   * When truthy (`true`, `1`, or `"1"`), each group includes its full `lists`
-   * array with hydrated items. Sent to the API as `includeLists=1`.
+   * When truthy (`true`, `1`, or `"1"`), each group includes embedded `lists`
+   * with hydrated items (`includeLists=1`).
+   *
+   * Expect at most **10 lists × 25 items** per group. For full data use
+   * `groups.getById` plus `lists.getById` / `lists.getByIdAllItems`. Groups
+   * endpoints may return **503** until the Groups API is enabled for the merchant.
    */
   includeLists?: boolean | 1 | "1";
 }>;
@@ -37,7 +41,10 @@ function normalizeGetGroupsQuery(query?: GetGroupsQuery): GetGroupsQuery | undef
 
 export function createGroupsResource(request: RequestFn) {
   return {
-    /** Fetch groups for the authenticated customer. */
+    /**
+     * Fetch groups for the authenticated customer.
+     * May return **503** when the Groups API is disabled for this merchant.
+     */
     getAll: (query?: GetGroupsQuery) =>
       request<GetGroupsResponse>({
         method: "GET",
@@ -46,7 +53,10 @@ export function createGroupsResource(request: RequestFn) {
         query: normalizeGetGroupsQuery(query),
       }),
 
-    /** Fetch group details by id. */
+    /**
+     * Fetch group details by id.
+     * May return **503** when the Groups API is disabled for this merchant.
+     */
     getById: (groupId: string, query?: GetGroupQuery) =>
       request<GetGroupResponse>({
         method: "GET",
@@ -92,11 +102,15 @@ export function createGroupsResource(request: RequestFn) {
         auth: "authenticated",
       }),
 
-    /** Reorder a group (spec uses listIds payload). */
-    reorder: (groupId: string, body: ReorderGroupBody) =>
-      request<ReorderGroupResponse, ReorderGroupBody>({
+    /**
+     * Reorder the customer's groups (`POST /api/groups/reorder`).
+     * Body must include `groupIds` in the desired order — not list IDs, and
+     * not a per-group path.
+     */
+    reorder: (body: ReorderGroupsBody) =>
+      request<ReorderGroupsResponse, ReorderGroupsBody>({
         method: "POST",
-        path: `/api/groups/${encodeURIComponent(groupId)}/reorder`,
+        path: "/api/groups/reorder",
         auth: "authenticated",
         body,
       }),
