@@ -2,4 +2,9 @@ export type { WishlistStackHydrogenOptions, WishlistStackHydrogenServer, Bootstr
 export { createWishlistStackServerContext } from "./server";
 export { createWishlistStackMiddleware } from "./middleware";
 export { getWishlistStack, getWishlistStackClient } from "./context";
-export { WishlistStackApiError, isWishlistStackApiError } from "@sdg.la/wishlist-stack-sdk";
+export {
+  WishlistStackApiError,
+  isWishlistStackApiError,
+  clampPageSize,
+  isAddItemsDeltaResponse,
+} from "@sdg.la/wishlist-stack-sdk";

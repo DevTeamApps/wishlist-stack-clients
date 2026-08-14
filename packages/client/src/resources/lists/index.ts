@@ -1,4 +1,6 @@
 import type { RequestArgs } from "../../client/request";
+import { MAX_PAGINATION_SIZE } from "../../constants";
+import { clampPage, clampPageSize } from "../../helpers/pagination";
 import type { PaginatedQuery } from "../../types/query-options";
 import type {
   AddItemsToListBody,
@@ -14,6 +16,7 @@ import type {
   DuplicateListResponse,
   GetListResponse,
   GetListsResponse,
+  HydratedWishlistItem,
   MarkListSharedResponse,
   RemoveItemFromListResponse,
   RemoveListResponse,
@@ -22,6 +25,7 @@ import type {
   UpdateListDetailsResponse,
   UpdateListItemResponse,
 } from "../../types/responses/lists";
+import type { Pagination } from "../../types/responses/common";
 
 type RequestFn = <TResponse = unknown, TBody = unknown>(
   args: RequestArgs<TBody>,
@@ -30,7 +34,43 @@ type RequestFn = <TResponse = unknown, TBody = unknown>(
 export type GetListsQuery = PaginatedQuery;
 export type GetListQuery = Omit<PaginatedQuery, "query">;
 
+export type AddItemsBatchedOptions = {
+  /** Max items per POST (API hard max is 25). */
+  batchSize?: number;
+};
+
+export type GetByIdAllItemsOptions = {
+  pageSize?: number;
+  sortBy?: GetListQuery["sortBy"];
+  sortDirection?: GetListQuery["sortDirection"];
+};
+
+function chunkItems<T>(items: T[], batchSize: number): T[][] {
+  const size = Math.max(1, Math.min(MAX_PAGINATION_SIZE, Math.trunc(batchSize) || MAX_PAGINATION_SIZE));
+  const chunks: T[][] = [];
+  for (let i = 0; i < items.length; i += size) {
+    chunks.push(items.slice(i, i + size));
+  }
+  return chunks.length ? chunks : [[]];
+}
+
 export function createListsResource(request: RequestFn) {
+  const getById = (listId: string, query?: GetListQuery) =>
+    request<GetListResponse>({
+      method: "GET",
+      path: `/api/lists/${encodeURIComponent(listId)}`,
+      auth: "authenticated",
+      query,
+    });
+
+  const addItems = (listId: string, body: AddItemsToListBody) =>
+    request<AddItemsToListResponse, AddItemsToListBody>({
+      method: "POST",
+      path: `/api/lists/${encodeURIComponent(listId)}/add`,
+      auth: "authenticated",
+      body,
+    });
+
   return {
     /** Returns all lists for the authenticated customer under the current merchant. */
     getAll: (query?: GetListsQuery) =>
@@ -42,15 +82,54 @@ export function createListsResource(request: RequestFn) {
       }),
 
     /** Fetch list details by id. */
-    getById: (listId: string, query?: GetListQuery) =>
-      request<GetListResponse>({
-        method: "GET",
-        path: `/api/lists/${encodeURIComponent(listId)}`,
-        auth: "authenticated",
-        query,
-      }),
+    getById,
 
-    /** Create a new list. */
+    /**
+     * Fetch every item on a list by walking pages (list detail is paginated;
+     * max pageSize 25).
+     */
+    getByIdAllItems: async (listId: string, opts?: GetByIdAllItemsOptions): Promise<GetListResponse> => {
+      const pageSize = clampPageSize(opts?.pageSize ?? MAX_PAGINATION_SIZE);
+      const sortBy = opts?.sortBy;
+      const sortDirection = opts?.sortDirection;
+
+      const first = await getById(listId, {
+        page: 1,
+        pageSize,
+        ...(sortBy ? { sortBy } : {}),
+        ...(sortDirection ? { sortDirection } : {}),
+      });
+
+      const totalPages = first.pagination.totalPages;
+      const allItems: HydratedWishlistItem[] = [...(first.items ?? [])];
+
+      for (let page = 2; page <= totalPages; page++) {
+        const next = await getById(listId, {
+          page: clampPage(page),
+          pageSize,
+          ...(sortBy ? { sortBy } : {}),
+          ...(sortDirection ? { sortDirection } : {}),
+        });
+        allItems.push(...(next.items ?? []));
+      }
+
+      const pagination: Pagination = {
+        ...first.pagination,
+        page: 1,
+        pageSize,
+      };
+
+      return {
+        ...first,
+        items: allItems,
+        pagination,
+      };
+    },
+
+    /**
+     * Create a new list. Do not send `variantIds` — add items via `addItems`
+     * or `addItemsBatched` after create.
+     */
     create: (body: CreateListBody) =>
       request<CreateListResponse, CreateListBody>({
         method: "POST",
@@ -90,14 +169,41 @@ export function createListsResource(request: RequestFn) {
         body,
       }),
 
-    /** Add one or more items to a list. */
-    addItems: (listId: string, body: AddItemsToListBody) =>
-      request<AddItemsToListResponse, AddItemsToListBody>({
-        method: "POST",
-        path: `/api/lists/${encodeURIComponent(listId)}/add`,
-        auth: "authenticated",
-        body,
-      }),
+    /**
+     * Add one or more items to a list.
+     * Returns `{ listId, addedItems, addedCount }`. Prefer `addItemsBatched`
+     * when sending more than 25 items.
+     */
+    addItems,
+
+    /**
+     * Add items in sequential batches of ≤25 (API hard max).
+     * Merges `{ addedItems, addedCount }` across batches.
+     */
+    addItemsBatched: async (
+      listId: string,
+      body: AddItemsToListBody,
+      opts?: AddItemsBatchedOptions,
+    ): Promise<AddItemsToListResponse> => {
+      const items = body.items ?? [];
+      const batchSize = opts?.batchSize ?? MAX_PAGINATION_SIZE;
+      const chunks = chunkItems(items, batchSize);
+
+      const merged: AddItemsToListResponse = {
+        listId,
+        addedItems: [],
+        addedCount: 0,
+      };
+
+      for (const chunk of chunks) {
+        const res = await addItems(listId, { items: chunk });
+        merged.listId = res.listId;
+        merged.addedItems.push(...res.addedItems);
+        merged.addedCount += res.addedCount;
+      }
+
+      return merged;
+    },
 
     /** Update an item on a list. */
     updateItem: (listId: string, itemId: string, body: UpdateListItemBody) =>
@@ -154,4 +260,3 @@ export function createListsResource(request: RequestFn) {
       }),
   };
 }
-

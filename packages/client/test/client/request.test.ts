@@ -202,5 +202,124 @@ describe("createRequest", () => {
     expect(apiErr.requestId).toBe("req-123");
     expect(apiErr.body).toEqual({ errors: [{ message: "bad", field: "name" }] });
   });
+
+  it("captures Retry-After and rate-limit headers on errors", async () => {
+    const mock = createMockFetch();
+    mock.setResponder(
+      () =>
+        new Response(JSON.stringify({ errors: [{ message: "slow down" }] }), {
+          status: 429,
+          headers: {
+            "content-type": "application/json",
+            "retry-after": "2",
+            "x-ratelimit-limit": "10000",
+            "x-ratelimit-remaining": "0",
+            "x-ratelimit-reset": "1700000000",
+            "x-nf-request-id": "nf-abc",
+          },
+        }),
+    );
+
+    const request = createRequest({
+      baseUrl: "https://example.test",
+      apiKey: "k",
+      customerAccessToken: "t",
+      fetch: mock.fetch,
+    });
+
+    let err: unknown;
+    try {
+      await request({ method: "GET", path: "/api/lists", auth: "authenticated" });
+    } catch (e) {
+      err = e;
+    }
+
+    const apiErr = err as WishlistStackApiError;
+    expect(apiErr.status).toBe(429);
+    expect(apiErr.retryAfter).toBe("2");
+    expect(apiErr.rateLimit).toEqual({
+      limit: "10000",
+      remaining: "0",
+      reset: "1700000000",
+    });
+    expect(apiErr.requestId).toBe("nf-abc");
+  });
+
+  it("maps groups 503 to a clear disabled message", async () => {
+    const mock = createMockFetch();
+    mock.setResponder(() => new Response(JSON.stringify({}), { status: 503 }));
+
+    const request = createRequest({
+      baseUrl: "https://example.test",
+      apiKey: "k",
+      customerAccessToken: "t",
+      fetch: mock.fetch,
+    });
+
+    await expect(
+      request({ method: "GET", path: "/api/groups", auth: "authenticated" }),
+    ).rejects.toMatchObject({
+      status: 503,
+      message: "Groups API disabled for this merchant",
+    });
+  });
+
+  it("retries once on 429 when retryOnRateLimit is enabled", async () => {
+    const mock = createMockFetch();
+    let hits = 0;
+    mock.setResponder(() => {
+      hits += 1;
+      if (hits === 1) {
+        return new Response(JSON.stringify({ errors: [{ message: "rate" }] }), {
+          status: 429,
+          headers: {
+            "content-type": "application/json",
+            "retry-after": "0",
+          },
+        });
+      }
+      return new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    });
+
+    const request = createRequest({
+      baseUrl: "https://example.test",
+      apiKey: "k",
+      customerAccessToken: "t",
+      fetch: mock.fetch,
+      retryOnRateLimit: true,
+    });
+
+    const result = await request<{ ok: boolean }>({
+      method: "GET",
+      path: "/api/lists",
+      auth: "authenticated",
+    });
+    expect(result.ok).toBe(true);
+    expect(mock.fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it("applies defaultTimeoutMs via AbortController", async () => {
+    const mock = createMockFetch();
+    mock.setResponder(async (call) => {
+      expect(call.init?.signal).toBeInstanceOf(AbortSignal);
+      return new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    });
+
+    const request = createRequest({
+      baseUrl: "https://example.test",
+      apiKey: "k",
+      customerAccessToken: "t",
+      fetch: mock.fetch,
+      defaultTimeoutMs: 5_000,
+    });
+
+    await request({ method: "GET", path: "/api/lists", auth: "authenticated" });
+  });
 });
 

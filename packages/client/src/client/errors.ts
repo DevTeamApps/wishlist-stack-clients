@@ -4,6 +4,14 @@ export type WishlistStackApiErrorDetails<TBody = unknown> = {
   method: string;
   requestId?: string;
   body?: TBody;
+  /** Value of the `Retry-After` response header when present (seconds or HTTP-date). */
+  retryAfter?: string;
+  /** Selected rate-limit response headers when present. */
+  rateLimit?: {
+    limit?: string;
+    remaining?: string;
+    reset?: string;
+  };
 };
 
 type ApiErrorItemLike = { message?: unknown; field?: unknown };
@@ -38,6 +46,8 @@ export class WishlistStackApiError<TBody = unknown> extends Error {
   readonly method: string;
   readonly requestId?: string;
   readonly body?: TBody;
+  readonly retryAfter?: string;
+  readonly rateLimit?: WishlistStackApiErrorDetails["rateLimit"];
 
   constructor(message: string, details: WishlistStackApiErrorDetails<TBody>) {
     super(message);
@@ -46,6 +56,8 @@ export class WishlistStackApiError<TBody = unknown> extends Error {
     this.method = details.method;
     this.requestId = details.requestId;
     this.body = details.body;
+    this.retryAfter = details.retryAfter;
+    this.rateLimit = details.rateLimit;
   }
 
   /**
@@ -77,4 +89,3 @@ export function isWishlistStackApiError(value: unknown): value is WishlistStackA
     typeof (value as any).method === "string"
   );
 }
-

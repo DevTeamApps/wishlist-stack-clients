@@ -87,6 +87,23 @@ describe("groups resource", () => {
     expect(call.init?.method).toBe("POST");
   });
 
+  it("calls POST /api/groups/reorder with groupIds body", async () => {
+    const mock = createMockFetch();
+    const client = createWishlistStackClient({
+      baseUrl: "https://example.test",
+      apiKey: "k",
+      customerAccessToken: "t",
+      fetch: mock.fetch,
+    });
+
+    await client.groups.reorder({ groupIds: ["g_3", "g_1", "g_2"] });
+
+    const call = mock.lastCall()!;
+    expect(String(call.input)).toBe("https://example.test/api/groups/reorder");
+    expect(call.init?.method).toBe("POST");
+    expect(call.init?.body).toBe(JSON.stringify({ groupIds: ["g_3", "g_1", "g_2"] }));
+  });
+
   it("supports pagination query params for groups.getById() (paginate lists under group)", async () => {
     const mock = createMockFetch();
     const client = createWishlistStackClient({

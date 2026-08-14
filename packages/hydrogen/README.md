@@ -51,6 +51,15 @@ const {nonce, header, NonceProvider} = createContentSecurityPolicy({
 Without this, client-side API calls will be silently blocked by the browser's
 Content Security Policy. If you use a custom `baseUrl`, add that domain instead.
 
+## API limits and storefront guidance
+
+1. Register the storefront origin for CORS if the browser calls the API directly.
+2. Keep CSP `connectSrc` pointed at your API `baseUrl` (see above).
+3. Prefer `wishlistStackClient.lists.addItemsBatched` for large adds and
+   `getByIdAllItems` when you need every item under paginated list detail.
+4. Re-exported helpers: `clampPageSize`, `isAddItemsDeltaResponse`
+   from `@sdg.la/wishlist-stack-hydrogen`.
+
 ## 1) Server usage (attach to Hydrogen load context)
 
 Use `createWishlistStackServerContext()` to create:
@@ -102,7 +111,8 @@ Now in loaders/actions you can do:
 
 ```ts
 export async function loader({context}: any) {
-  // Opt-in to lists + hydrated items in one call
+  // includeLists is capped (10 lists × 25 items).
+  // Prefer lists.getById / getByIdAllItems for full list data.
   return await context.wishlistStackClient.groups.getAll({ includeLists: true });
 }
 ```

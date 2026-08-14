@@ -34,11 +34,10 @@ jobs:
         with:
           node-version: "24"  # Needed for npm@11 for Trusted Publishing
           registry-url: "https://registry.npmjs.org"
+          cache: npm
 
       - name: Install dependencies
-        run: |
-          rm -rf node_modules package-lock.json
-          npm install
+        run: npm ci
 
       - name: Build
         run: npm run build

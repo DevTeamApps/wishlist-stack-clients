@@ -6,11 +6,14 @@ function createLazyWishlistStackClient(getClient: () => Promise<WishlistStackCli
     lists: {
       getAll: (query) => getClient().then((c) => c.lists.getAll(query)),
       getById: (listId, query) => getClient().then((c) => c.lists.getById(listId, query)),
+      getByIdAllItems: (listId, opts) => getClient().then((c) => c.lists.getByIdAllItems(listId, opts)),
       create: (body) => getClient().then((c) => c.lists.create(body)),
       update: (listId, body) => getClient().then((c) => c.lists.update(listId, body)),
       remove: (listId) => getClient().then((c) => c.lists.remove(listId)),
       duplicate: (listId, body) => getClient().then((c) => c.lists.duplicate(listId, body)),
       addItems: (listId, body) => getClient().then((c) => c.lists.addItems(listId, body)),
+      addItemsBatched: (listId, body, opts) =>
+        getClient().then((c) => c.lists.addItemsBatched(listId, body, opts)),
       updateItem: (listId, itemId, body) => getClient().then((c) => c.lists.updateItem(listId, itemId, body)),
       removeItem: (listId, itemId) => getClient().then((c) => c.lists.removeItem(listId, itemId)),
       reorderItems: (listId, body) => getClient().then((c) => c.lists.reorderItems(listId, body)),
@@ -25,7 +28,7 @@ function createLazyWishlistStackClient(getClient: () => Promise<WishlistStackCli
       update: (groupId, body) => getClient().then((c) => c.groups.update(groupId, body)),
       remove: (groupId) => getClient().then((c) => c.groups.remove(groupId)),
       duplicate: (groupId) => getClient().then((c) => c.groups.duplicate(groupId)),
-      reorder: (groupId, body) => getClient().then((c) => c.groups.reorder(groupId, body)),
+      reorder: (body) => getClient().then((c) => c.groups.reorder(body)),
       share: (groupId) => getClient().then((c) => c.groups.share(groupId)),
       unshare: (groupId) => getClient().then((c) => c.groups.unshare(groupId)),
     },

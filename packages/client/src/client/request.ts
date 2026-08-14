@@ -11,6 +11,10 @@ export type RequestContext = {
   apiKey: string;
   customerAccessToken?: string;
   fetch: FetchLike;
+  /** Applied when a call does not pass `timeoutMs`. */
+  defaultTimeoutMs?: number;
+  /** When true, retry a single time on HTTP 429 with jittered delay. */
+  retryOnRateLimit?: boolean;
 };
 
 export type RequestArgs<TBody> = {
@@ -32,6 +36,54 @@ async function safeParseJson(res: Response): Promise<unknown | undefined> {
   } catch {
     return undefined;
   }
+}
+
+function pickRequestId(res: Response): string | undefined {
+  return (
+    res.headers.get("fly-request-id") ??
+    res.headers.get("x-request-id") ??
+    res.headers.get("x-nf-request-id") ??
+    res.headers.get("x-netlify-request-id") ??
+    undefined
+  );
+}
+
+function pickRateLimit(res: Response): { limit?: string; remaining?: string; reset?: string } | undefined {
+  const limit = res.headers.get("x-ratelimit-limit") ?? undefined;
+  const remaining = res.headers.get("x-ratelimit-remaining") ?? undefined;
+  const reset = res.headers.get("x-ratelimit-reset") ?? undefined;
+  if (!limit && !remaining && !reset) return undefined;
+  return { limit, remaining, reset };
+}
+
+function errorMessageFor(status: number, path: string): string {
+  if (status === 503 && path.includes("/api/groups")) {
+    return "Groups API disabled for this merchant";
+  }
+  return `Wishlist Stack API request failed (${status})`;
+}
+
+function parseRetryAfterMs(retryAfter: string | undefined): number {
+  if (!retryAfter) return 0;
+  const asSeconds = Number(retryAfter);
+  if (Number.isFinite(asSeconds) && asSeconds >= 0) {
+    return Math.min(asSeconds * 1000, 30_000);
+  }
+  const asDate = Date.parse(retryAfter);
+  if (!Number.isNaN(asDate)) {
+    return Math.min(Math.max(0, asDate - Date.now()), 30_000);
+  }
+  return 0;
+}
+
+function jitterDelayMs(baseMs: number): number {
+  const base = Math.max(100, baseMs || 500);
+  const jitter = Math.floor(Math.random() * 250);
+  return Math.min(base + jitter, 30_000);
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export function createRequest(ctx: RequestContext) {
@@ -59,39 +111,52 @@ export function createRequest(ctx: RequestContext) {
       body = JSON.stringify(args.body);
     }
 
-    const controller = args.timeoutMs ? new AbortController() : undefined;
-    const timeout =
-      args.timeoutMs && controller
-        ? setTimeout(() => controller.abort(), args.timeoutMs)
-        : undefined;
+    const timeoutMs = args.timeoutMs ?? ctx.defaultTimeoutMs;
 
-    const signal = args.signal
-      ? args.signal
-      : controller
-        ? controller.signal
-        : undefined;
+    const doFetch = async (): Promise<Response> => {
+      const controller = timeoutMs ? new AbortController() : undefined;
+      const timeout =
+        timeoutMs && controller
+          ? setTimeout(() => controller.abort(), timeoutMs)
+          : undefined;
 
-    const res = await ctx.fetch(url, {
-      method: args.method,
-      headers,
-      body,
-      signal,
-    });
+      const signal = args.signal
+        ? args.signal
+        : controller
+          ? controller.signal
+          : undefined;
 
-    if (timeout) clearTimeout(timeout);
+      try {
+        return await ctx.fetch(url, {
+          method: args.method,
+          headers,
+          body,
+          signal,
+        });
+      } finally {
+        if (timeout) clearTimeout(timeout);
+      }
+    };
+
+    let res = await doFetch();
+
+    if (!res.ok && res.status === 429 && ctx.retryOnRateLimit) {
+      const retryAfter = res.headers.get("retry-after") ?? undefined;
+      await sleep(jitterDelayMs(parseRetryAfterMs(retryAfter)));
+      res = await doFetch();
+    }
 
     if (!res.ok) {
       const errBody = (await safeParseJson(res)) as ApiErrorResponse | unknown;
-      const requestId =
-        res.headers.get("fly-request-id") ??
-        res.headers.get("x-request-id") ??
-        undefined;
-      throw new WishlistStackApiError<ApiErrorResponse | unknown>(`Wishlist Stack API request failed (${res.status})`, {
+      const retryAfter = res.headers.get("retry-after") ?? undefined;
+      throw new WishlistStackApiError<ApiErrorResponse | unknown>(errorMessageFor(res.status, args.path), {
         status: res.status,
         url,
         method: args.method,
-        requestId,
+        requestId: pickRequestId(res),
         body: errBody,
+        retryAfter,
+        rateLimit: pickRateLimit(res),
       });
     }
 
@@ -107,4 +172,3 @@ export function createRequest(ctx: RequestContext) {
     return parsed as TResponse;
   };
 }
-

@@ -80,8 +80,10 @@ export type GetListsResponse = {
   pagination: Pagination;
 };
 
-/** GET `/api/lists/:listId` */
-export type GetListResponse = ListDetail;
+/** GET `/api/lists/:listId` — items are paginated (max pageSize 25). */
+export type GetListResponse = ListDetail & {
+  pagination: Pagination;
+};
 
 export type ListMutationResponse = Omit<ListSummary, "featuredProducts">;
 
@@ -89,7 +91,17 @@ export type CreateListResponse = ListMutationResponse;
 export type DuplicateListResponse = ListMutationResponse;
 export type UpdateListDetailsResponse = ListMutationResponse;
 export type RemoveListResponse = OkResponse;
-export type AddItemsToListResponse = unknown;
+
+/** POST `/api/lists/:listId/add` — newly added items only. */
+export type AddItemsToListResponse = {
+  listId: string;
+  addedItems: HydratedWishlistItem[];
+  addedCount: number;
+};
+
+/** @deprecated Use `AddItemsToListResponse`. */
+export type AddItemsToListDeltaResponse = AddItemsToListResponse;
+
 export type UpdateListItemResponse = unknown;
 export type RemoveItemFromListResponse = OkResponse;
 export type ReorderListItemsResponse = {
