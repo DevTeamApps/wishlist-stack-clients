@@ -1,6 +1,6 @@
 {
   "name": "@sdg.la/wishlist-stack-hydrogen",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "description": "Hydrogen (react-router) integration for wishlist-stack-sdk",
   "repository": {
     "type": "git",
@@ -38,7 +38,7 @@
   ],
   "sideEffects": false,
   "dependencies": {
-    "@sdg.la/wishlist-stack-sdk": "^0.13.0"
+    "@sdg.la/wishlist-stack-sdk": "^0.14.0"
   },
   "peerDependencies": {
     "react": ">=18",
