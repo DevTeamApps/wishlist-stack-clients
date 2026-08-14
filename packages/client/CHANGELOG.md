@@ -1,5 +1,28 @@
 # @sdg.la/wishlist-stack-sdk
 
+## 0.14.0
+
+### Minor Changes
+
+- [#28](https://github.com/DevTeamApps/wishlist-stack-clients/pull/28) [`99026f7`](https://github.com/DevTeamApps/wishlist-stack-clients/commit/99026f725c3075436a5230133903a50250c0ba34) Thanks [@n8cotoa](https://github.com/n8cotoa)! - Browns readiness / API limits and response shapes (sc-489527).
+
+  ### Migration (storefronts)
+
+  - `lists.addItems` returns `{ listId, addedItems, addedCount }` (not the full list). Refresh with `lists.getById` / `getByIdAllItems` when you need every item.
+  - Use `lists.addItemsBatched` when adding more than 25 items.
+  - List detail is paginated (max pageSize 25) and includes `pagination`. Prefer `clampPageSize` / `getByIdAllItems`.
+  - Do not send `variantIds` on `lists.create`. Create then add items. `quantity` on add supports 1–999.
+  - `groups.reorder` is `POST /api/groups/reorder` with `{ groupIds }` (not per-group `listIds`).
+  - Optional client options: `defaultTimeoutMs`, `retryOnRateLimit`. Errors expose `retryAfter` and rate-limit headers; groups 503 maps to a clear disabled message.
+  - Register storefront CORS origins when the browser calls the API directly.
+
+  ### SDK
+
+  - Typed `GetListResponse.pagination` and add delta response
+  - Helpers: `addItemsBatched`, `getByIdAllItems`, `clampPageSize`
+  - Error / timeout / opt-in 429 retry improvements
+  - Groups `includeLists` / 503 docs; reorder contract aligned to OpenAPI
+
 ## 0.13.0
 
 ### Minor Changes
