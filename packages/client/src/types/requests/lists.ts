@@ -17,7 +17,7 @@ export type UpdateListBody = {
 export type AddItemsToListBody = {
   items?: Array<{
     variantId?: string;
-    /** Quantity for the item (1–999). Some deployments may still store `1`. */
+    /** Quantity for the item (1–999). */
     quantity?: number;
     note?: string;
     properties?: Record<string, unknown> | null;

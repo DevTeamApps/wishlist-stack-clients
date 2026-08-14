@@ -1,10 +1,6 @@
 import type { RequestArgs } from "../../client/request";
 import { MAX_PAGINATION_SIZE } from "../../constants";
 import { clampPage, clampPageSize } from "../../helpers/pagination";
-import {
-  isAddItemsDeltaResponse,
-  isAddItemsLegacyResponse,
-} from "../../types/guards";
 import type { PaginatedQuery } from "../../types/query-options";
 import type {
   AddItemsToListBody,
@@ -15,7 +11,6 @@ import type {
   UpdateListItemBody,
 } from "../../types/requests/lists";
 import type {
-  AddItemsToListDeltaResponse,
   AddItemsToListResponse,
   CreateListResponse,
   DuplicateListResponse,
@@ -90,8 +85,8 @@ export function createListsResource(request: RequestFn) {
     getById,
 
     /**
-     * Fetch every item on a list by walking pages when list detail is paginated.
-     * Responses that already include all items on page 1 still work.
+     * Fetch every item on a list by walking pages (list detail is paginated;
+     * max pageSize 25).
      */
     getByIdAllItems: async (listId: string, opts?: GetByIdAllItemsOptions): Promise<GetListResponse> => {
       const pageSize = clampPageSize(opts?.pageSize ?? MAX_PAGINATION_SIZE);
@@ -105,7 +100,7 @@ export function createListsResource(request: RequestFn) {
         ...(sortDirection ? { sortDirection } : {}),
       });
 
-      const totalPages = first.pagination?.totalPages ?? 1;
+      const totalPages = first.pagination.totalPages;
       const allItems: HydratedWishlistItem[] = [...(first.items ?? [])];
 
       for (let page = 2; page <= totalPages; page++) {
@@ -118,20 +113,16 @@ export function createListsResource(request: RequestFn) {
         allItems.push(...(next.items ?? []));
       }
 
-      const pagination: Pagination | undefined = first.pagination
-        ? {
-            ...first.pagination,
-            page: 1,
-            pageSize,
-            totalCount: first.pagination.totalCount,
-            totalPages: first.pagination.totalPages,
-          }
-        : undefined;
+      const pagination: Pagination = {
+        ...first.pagination,
+        page: 1,
+        pageSize,
+      };
 
       return {
         ...first,
         items: allItems,
-        ...(pagination ? { pagination } : {}),
+        pagination,
       };
     },
 
@@ -180,15 +171,14 @@ export function createListsResource(request: RequestFn) {
 
     /**
      * Add one or more items to a list.
-     * The response may be a delta (`addedItems` / `addedCount`) or the full list.
-     * Prefer `addItemsBatched` when sending more than 25 items.
+     * Returns `{ listId, addedItems, addedCount }`. Prefer `addItemsBatched`
+     * when sending more than 25 items.
      */
     addItems,
 
     /**
      * Add items in sequential batches of ≤25 (API hard max).
-     * Merges delta responses; if any response is a full-list shape,
-     * returns the last full-list response.
+     * Merges `{ addedItems, addedCount }` across batches.
      */
     addItemsBatched: async (
       listId: string,
@@ -199,30 +189,19 @@ export function createListsResource(request: RequestFn) {
       const batchSize = opts?.batchSize ?? MAX_PAGINATION_SIZE;
       const chunks = chunkItems(items, batchSize);
 
-      let lastLegacy: AddItemsToListResponse | undefined;
-      const merged: AddItemsToListDeltaResponse = {
+      const merged: AddItemsToListResponse = {
         listId,
         addedItems: [],
         addedCount: 0,
       };
-      let sawDelta = false;
 
       for (const chunk of chunks) {
         const res = await addItems(listId, { items: chunk });
-        if (isAddItemsDeltaResponse(res)) {
-          sawDelta = true;
-          merged.listId = res.listId;
-          merged.addedItems.push(...res.addedItems);
-          merged.addedCount += res.addedCount;
-        } else if (isAddItemsLegacyResponse(res)) {
-          lastLegacy = res;
-        } else {
-          lastLegacy = res;
-        }
+        merged.listId = res.listId;
+        merged.addedItems.push(...res.addedItems);
+        merged.addedCount += res.addedCount;
       }
 
-      if (sawDelta && !lastLegacy) return merged;
-      if (lastLegacy) return lastLegacy;
       return merged;
     },
 

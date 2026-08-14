@@ -7,5 +7,4 @@ export {
   isWishlistStackApiError,
   clampPageSize,
   isAddItemsDeltaResponse,
-  isAddItemsLegacyResponse,
 } from "@sdg.la/wishlist-stack-sdk";

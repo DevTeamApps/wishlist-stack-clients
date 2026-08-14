@@ -57,8 +57,8 @@ Content Security Policy. If you use a custom `baseUrl`, add that domain instead.
 2. Keep CSP `connectSrc` pointed at your API `baseUrl` (see above).
 3. Prefer `wishlistStackClient.lists.addItemsBatched` for large adds and
    `getByIdAllItems` when you need every item under paginated list detail.
-4. Re-exported helpers: `clampPageSize`, `isAddItemsDeltaResponse`,
-   `isAddItemsLegacyResponse` from `@sdg.la/wishlist-stack-hydrogen`.
+4. Re-exported helpers: `clampPageSize`, `isAddItemsDeltaResponse`
+   from `@sdg.la/wishlist-stack-hydrogen`.
 
 ## 1) Server usage (attach to Hydrogen load context)
 

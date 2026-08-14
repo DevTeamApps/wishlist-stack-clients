@@ -1,10 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createWishlistStackClient } from "../../src/client/createWishlistStackClient";
 import { createMockFetch } from "../helpers/mockFetch";
-import {
-  isAddItemsDeltaResponse,
-  isAddItemsLegacyResponse,
-} from "../../src/types/guards";
+import { isAddItemsDeltaResponse } from "../../src/types/guards";
 import { clampPageSize } from "../../src/helpers/pagination";
 
 describe("lists resource", () => {
@@ -106,11 +103,11 @@ describe("lists resource", () => {
     });
 
     const res = await client.lists.getById("l_1");
-    expect(res.pagination?.pageSize).toBe(25);
+    expect(res.pagination.pageSize).toBe(25);
     expect(res.items).toHaveLength(1);
   });
 
-  it("distinguishes addItems delta vs legacy responses with type guards", async () => {
+  it("returns addItems delta response", async () => {
     const mock = createMockFetch();
     const client = createWishlistStackClient({
       baseUrl: "https://example.test",
@@ -130,33 +127,13 @@ describe("lists resource", () => {
           { status: 200, headers: { "content-type": "application/json" } },
         ),
     );
-    const delta = await client.lists.addItems("l_1", { items: [{ variantId: "v1" }] });
-    expect(isAddItemsDeltaResponse(delta)).toBe(true);
-    expect(isAddItemsLegacyResponse(delta)).toBe(false);
-
-    mock.setResponder(
-      () =>
-        new Response(
-          JSON.stringify({
-            id: "l_1",
-            name: "Wishlist",
-            description: null,
-            position: 1,
-            shared: false,
-            itemCount: 1,
-            createdAt: "",
-            updatedAt: "",
-            items: [{ id: "i1", quantity: 1, position: 1, product: {}, createdAt: "", updatedAt: "" }],
-          }),
-          { status: 200, headers: { "content-type": "application/json" } },
-        ),
-    );
-    const legacy = await client.lists.addItems("l_1", { items: [{ variantId: "v1" }] });
-    expect(isAddItemsLegacyResponse(legacy)).toBe(true);
-    expect(isAddItemsDeltaResponse(legacy)).toBe(false);
+    const res = await client.lists.addItems("l_1", { items: [{ variantId: "v1" }] });
+    expect(isAddItemsDeltaResponse(res)).toBe(true);
+    expect(res.addedCount).toBe(1);
+    expect(res.listId).toBe("l_1");
   });
 
-  it("addItemsBatched splits 30 items into 25+5 POSTs and merges delta responses", async () => {
+  it("addItemsBatched splits 30 items into 25+5 POSTs and merges responses", async () => {
     const mock = createMockFetch();
     let callCount = 0;
     mock.setResponder((call) => {
@@ -194,11 +171,8 @@ describe("lists resource", () => {
     const bodies = mock.calls.map((c) => JSON.parse(String(c.init?.body ?? "{}")));
     expect(bodies[0].items).toHaveLength(25);
     expect(bodies[1].items).toHaveLength(5);
-    expect(isAddItemsDeltaResponse(res)).toBe(true);
-    if (isAddItemsDeltaResponse(res)) {
-      expect(res.addedCount).toBe(30);
-      expect(res.addedItems).toHaveLength(30);
-    }
+    expect(res.addedCount).toBe(30);
+    expect(res.addedItems).toHaveLength(30);
   });
 
   it("getByIdAllItems follows pagination across two pages", async () => {
@@ -237,7 +211,7 @@ describe("lists resource", () => {
     const res = await client.lists.getByIdAllItems("l_1", { pageSize: 1 });
     expect(mock.calls).toHaveLength(2);
     expect(res.items.map((i) => i.id)).toEqual(["i1", "i2"]);
-    expect(res.pagination?.totalPages).toBe(2);
+    expect(res.pagination.totalPages).toBe(2);
   });
 });
 

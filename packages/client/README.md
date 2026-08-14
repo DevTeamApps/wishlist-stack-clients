@@ -80,31 +80,26 @@ const { lists } = await client.lists.getAll();
 
 ### Pagination, batching, and add responses
 
-The API paginates list detail (max `pageSize` **25**) and may return either a full list or an add **delta**. Use the helpers and type guards so storefronts work against both response shapes:
+The API paginates list detail (max `pageSize` **25**) and returns an add **delta** (`{ listId, addedItems, addedCount }`).
 
 | Concern | Guidance |
 |---------|----------|
 | List detail | Prefer `page` / `pageSize` ≤ 25, or `lists.getByIdAllItems` for every item |
 | Adding many items | Use `lists.addItemsBatched` (chunks of ≤ 25) |
-| Add response | Delta `{ listId, addedItems, addedCount }` or full list — narrow with `isAddItemsDeltaResponse` |
+| Add response | `{ listId, addedItems, addedCount }` |
 | Create + items | Do not send `variantIds` on create; create the list, then `addItems` |
-| `quantity` on add | Supported **1–999** (some deployments may still store `1`) |
+| `quantity` on add | Supported **1–999** |
 | `includeLists` | Cap of **10 lists × 25 items**; use `getById` helpers for full data |
 | Groups | May return **503** until enabled for the merchant |
 
 ```ts
-import {
-  isAddItemsDeltaResponse,
-  clampPageSize,
-} from '@sdg.la/wishlist-stack-sdk';
+import { clampPageSize } from '@sdg.la/wishlist-stack-sdk';
 
 const res = await client.lists.addItemsBatched(id, { items: many });
-if (isAddItemsDeltaResponse(res)) {
-  // res.addedItems / res.addedCount — then refresh if needed:
-  const full = await client.lists.getByIdAllItems(id, {
-    pageSize: clampPageSize(25),
-  });
-}
+// res.addedItems / res.addedCount — then refresh if needed:
+const full = await client.lists.getByIdAllItems(id, {
+  pageSize: clampPageSize(25),
+});
 ```
 
 ## Usage
@@ -727,17 +722,17 @@ const { lists, pagination } = await client.lists.getAll({ page: 1, pageSize: 10,
 
 #### `lists.getById(listId, query?)`
 
-Fetch a single list by ID. Items are hydrated with Shopify product data and may be paginated. When paginated, the response includes `pagination` (max `pageSize` **25**).
+Fetch a single list by ID. Items are hydrated with Shopify product data and paginated. The response includes `pagination` (max `pageSize` **25**).
 
 - **Endpoint:** `GET /api/lists/{listId}`
 - **Parameters:**
   - `listId` — `string`
   - `query?` — `{ page?: number; pageSize?: number; sortBy?: 'position' | 'createdAt' | 'updatedAt'; sortDirection?: 'asc' | 'desc' }`
-- **Returns:** `Promise<GetListResponse>` (`ListDetail & { pagination?: Pagination }`)
+- **Returns:** `Promise<GetListResponse>` (`ListDetail & { pagination: Pagination }`)
 
 ```ts
 const list = await client.lists.getById('list-id', { page: 1, pageSize: 25, sortBy: 'updatedAt', sortDirection: 'desc' });
-// list.pagination?.totalPages when the API returns pagination
+// list.pagination.totalPages
 ```
 
 <details>
@@ -804,7 +799,7 @@ const list = await client.lists.getById('list-id', { page: 1, pageSize: 25, sort
 
 #### `lists.getByIdAllItems(listId, opts?)`
 
-Walk every page of `lists.getById` and return one list with all items concatenated. Use when you need the full wishlist and list detail is paginated.
+Walk every page of `lists.getById` and return one list with all items concatenated. Use when you need the full wishlist.
 
 ```ts
 const full = await client.lists.getByIdAllItems('list-id', { pageSize: 25 });
@@ -814,7 +809,7 @@ const full = await client.lists.getByIdAllItems('list-id', { pageSize: 25 });
 
 #### `lists.create(body)`
 
-Create a new list, optionally assigned to a group. Do **not** send `variantIds` on create (the API may reject them). Create the list, then call `addItems` / `addItemsBatched`.
+Create a new list, optionally assigned to a group. Do **not** send `variantIds` on create (the API rejects them). Create the list, then call `addItems` / `addItemsBatched`.
 
 - **Endpoint:** `POST /api/lists`
 - **Parameters:** `body` — `{ name?: string; description?: string; groupId?: string }`
@@ -958,7 +953,7 @@ Add one or more items to a list. Prefer `lists.addItemsBatched` when sending mor
 type AddItemsToListBody = {
   items?: Array<{
     variantId?: string;
-    /** Supported range 1–999 (some deployments may still store 1). */
+    /** Quantity 1–999. */
     quantity?: number;
     note?: string;
     properties?: Record<string, unknown> | null;
@@ -966,15 +961,9 @@ type AddItemsToListBody = {
 };
 ```
 
-- **Returns:** `Promise<AddItemsToListResponse>` — either:
-  - Delta: `{ listId, addedItems, addedCount }`
-  - Full list (same shape as `getById`)
-
-Use `isAddItemsDeltaResponse` / `isAddItemsLegacyResponse` to narrow.
+- **Returns:** `Promise<AddItemsToListResponse>` — `{ listId, addedItems, addedCount }`
 
 ```ts
-import { isAddItemsDeltaResponse } from '@sdg.la/wishlist-stack-sdk';
-
 const res = await client.lists.addItems('list-id', {
   items: [
     { variantId: 'gid://shopify/ProductVariant/123', quantity: 1 },
@@ -982,14 +971,12 @@ const res = await client.lists.addItems('list-id', {
   ],
 });
 
-if (isAddItemsDeltaResponse(res)) {
-  console.log(res.addedCount, res.addedItems);
-}
+console.log(res.addedCount, res.addedItems);
 ```
 
 #### `lists.addItemsBatched(listId, body, opts?)`
 
-Chunks `items` into sequential POSTs of ≤25 (configurable via `opts.batchSize`) and merges delta responses when present.
+Chunks `items` into sequential POSTs of ≤25 (configurable via `opts.batchSize`) and merges `{ addedItems, addedCount }`.
 
 ```ts
 const res = await client.lists.addItemsBatched('list-id', { items: many });
@@ -1245,7 +1232,6 @@ import type {
   // Helpers
   clampPageSize,
   isAddItemsDeltaResponse,
-  isAddItemsLegacyResponse,
 
   // Groups
   GetGroupsResponse,
@@ -1273,7 +1259,6 @@ import type {
   AddItemsToListBody,
   AddItemsToListResponse,
   AddItemsToListDeltaResponse,
-  AddItemsToListLegacyResponse,
   UpdateListItemBody,
   ReorderListItemsBody,
   ReorderListItemsResponse,
