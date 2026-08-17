@@ -3,7 +3,7 @@
  * Create the list, then call `lists.addItems` or `lists.addItemsBatched`.
  */
 export type CreateListBody = {
-  name?: string;
+  name: string;
   description?: string;
   groupId?: string;
 };
@@ -15,13 +15,18 @@ export type UpdateListBody = {
 };
 
 export type AddItemsToListBody = {
-  items?: Array<{
-    variantId?: string;
+  items: Array<{
+    variantId: string;
     /** Quantity for the item (1–999). */
     quantity?: number;
     note?: string;
     properties?: Record<string, unknown> | null;
   }>;
+};
+
+/** Check membership for 1–100 Shopify product variant IDs. */
+export type ContainsVariantsBody = {
+  variantIds: string[];
 };
 
 export type UpdateListItemBody = {
@@ -40,4 +45,3 @@ export type DuplicateListBody = {
   /** Destination group. Omit to keep source group; `null` to ungroup. */
   groupId?: string | null;
 };
-

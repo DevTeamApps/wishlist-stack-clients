@@ -301,6 +301,70 @@ describe("createRequest", () => {
     expect(mock.fetch).toHaveBeenCalledTimes(2);
   });
 
+  it("does not retry mutations on 429", async () => {
+    const mock = createMockFetch();
+    mock.setResponder(
+      () =>
+        new Response(JSON.stringify({ errors: [{ message: "rate" }] }), {
+          status: 429,
+          headers: {
+            "content-type": "application/json",
+            "retry-after": "0",
+          },
+        }),
+    );
+    const request = createRequest({
+      baseUrl: "https://example.test",
+      apiKey: "k",
+      customerAccessToken: "t",
+      fetch: mock.fetch,
+      retryOnRateLimit: true,
+    });
+
+    await expect(
+      request({
+        method: "POST",
+        path: "/api/lists/l_1/add",
+        auth: "authenticated",
+        body: { items: [{ variantId: "123" }] },
+      }),
+    ).rejects.toMatchObject({ status: 429, method: "POST" });
+    expect(mock.fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("retries an explicitly safe POST read on 429", async () => {
+    const mock = createMockFetch();
+    let hits = 0;
+    mock.setResponder(() => {
+      hits += 1;
+      return new Response(JSON.stringify(hits === 1 ? { errors: [] } : { ok: true }), {
+        status: hits === 1 ? 429 : 200,
+        headers: {
+          "content-type": "application/json",
+          "retry-after": "0",
+        },
+      });
+    });
+    const request = createRequest({
+      baseUrl: "https://example.test",
+      apiKey: "k",
+      customerAccessToken: "t",
+      fetch: mock.fetch,
+      retryOnRateLimit: true,
+    });
+
+    await expect(
+      request({
+        method: "POST",
+        path: "/api/lists/l_1/contains",
+        auth: "authenticated",
+        body: { variantIds: ["123"] },
+        retryable: true,
+      }),
+    ).resolves.toEqual({ ok: true });
+    expect(mock.fetch).toHaveBeenCalledTimes(2);
+  });
+
   it("applies defaultTimeoutMs via AbortController", async () => {
     const mock = createMockFetch();
     mock.setResponder(async (call) => {
@@ -322,4 +386,3 @@ describe("createRequest", () => {
     await request({ method: "GET", path: "/api/lists", auth: "authenticated" });
   });
 });
-
