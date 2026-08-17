@@ -1,5 +1,24 @@
 # @sdg.la/wishlist-stack-hydrogen
 
+## 0.15.0
+
+### Minor Changes
+
+- [#30](https://github.com/DevTeamApps/wishlist-stack-clients/pull/30) [`3b3ae62`](https://github.com/DevTeamApps/wishlist-stack-clients/commit/3b3ae62390c29a7cee7c03880b553a96bfbd1620) Thanks [@n8cotoa](https://github.com/n8cotoa)! - Complete the wishlist remediation client contract for sc-490614.
+
+  - Add `lists.containsVariants` for indexed membership checks and lightweight
+    matching item records without product hydration.
+  - Require list names, add-item arrays, and add-item variant IDs in TypeScript.
+  - Restrict opt-in HTTP 429 retries to safe reads, including membership checks.
+  - Expose membership checks through the Hydrogen lazy client.
+  - Model list-detail pagination separately, reject empty batched adds locally,
+    and support the backend's additive compatibility response.
+
+### Patch Changes
+
+- Updated dependencies [[`3b3ae62`](https://github.com/DevTeamApps/wishlist-stack-clients/commit/3b3ae62390c29a7cee7c03880b553a96bfbd1620)]:
+  - @sdg.la/wishlist-stack-sdk@0.15.0
+
 ## 0.14.0
 
 ### Minor Changes
