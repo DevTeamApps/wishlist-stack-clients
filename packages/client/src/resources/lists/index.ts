@@ -4,6 +4,7 @@ import { clampPage, clampPageSize } from "../../helpers/pagination";
 import type { PaginatedQuery } from "../../types/query-options";
 import type {
   AddItemsToListBody,
+  ContainsVariantsBody,
   CreateListBody,
   DuplicateListBody,
   ReorderListItemsBody,
@@ -12,6 +13,7 @@ import type {
 } from "../../types/requests/lists";
 import type {
   AddItemsToListResponse,
+  ContainsVariantsResponse,
   CreateListResponse,
   DuplicateListResponse,
   GetListResponse,
@@ -25,7 +27,7 @@ import type {
   UpdateListDetailsResponse,
   UpdateListItemResponse,
 } from "../../types/responses/lists";
-import type { Pagination } from "../../types/responses/common";
+import type { ListDetailPagination } from "../../types/responses/common";
 
 type RequestFn = <TResponse = unknown, TBody = unknown>(
   args: RequestArgs<TBody>,
@@ -113,7 +115,7 @@ export function createListsResource(request: RequestFn) {
         allItems.push(...(next.items ?? []));
       }
 
-      const pagination: Pagination = {
+      const pagination: ListDetailPagination = {
         ...first.pagination,
         page: 1,
         pageSize,
@@ -177,6 +179,19 @@ export function createListsResource(request: RequestFn) {
     addItems,
 
     /**
+     * Check whether up to 100 variants are present without hydrating or
+     * paging through the list. Response keys preserve the supplied IDs.
+     */
+    containsVariants: (listId: string, body: ContainsVariantsBody) =>
+      request<ContainsVariantsResponse, ContainsVariantsBody>({
+        method: "POST",
+        path: `/api/lists/${encodeURIComponent(listId)}/contains`,
+        auth: "authenticated",
+        body,
+        retryable: true,
+      }),
+
+    /**
      * Add items in sequential batches of ≤25 (API hard max).
      * Merges `{ addedItems, addedCount }` across batches.
      */
@@ -186,6 +201,9 @@ export function createListsResource(request: RequestFn) {
       opts?: AddItemsBatchedOptions,
     ): Promise<AddItemsToListResponse> => {
       const items = body.items ?? [];
+      if (items.length === 0) {
+        throw new Error("lists.addItemsBatched requires at least one item");
+      }
       const batchSize = opts?.batchSize ?? MAX_PAGINATION_SIZE;
       const chunks = chunkItems(items, batchSize);
 

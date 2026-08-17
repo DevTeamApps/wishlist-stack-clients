@@ -13,7 +13,7 @@ export type RequestContext = {
   fetch: FetchLike;
   /** Applied when a call does not pass `timeoutMs`. */
   defaultTimeoutMs?: number;
-  /** When true, retry a single time on HTTP 429 with jittered delay. */
+  /** When true, retry safe GET requests once on HTTP 429 with jittered delay. */
   retryOnRateLimit?: boolean;
 };
 
@@ -26,6 +26,8 @@ export type RequestArgs<TBody> = {
   headers?: Record<string, string>;
   signal?: AbortSignal;
   timeoutMs?: number;
+  /** Marks a non-GET operation as safe to retry once on HTTP 429. */
+  retryable?: boolean;
 };
 
 async function safeParseJson(res: Response): Promise<unknown | undefined> {
@@ -140,7 +142,8 @@ export function createRequest(ctx: RequestContext) {
 
     let res = await doFetch();
 
-    if (!res.ok && res.status === 429 && ctx.retryOnRateLimit) {
+    const retryable = args.method === "GET" || args.retryable === true;
+    if (!res.ok && res.status === 429 && ctx.retryOnRateLimit && retryable) {
       const retryAfter = res.headers.get("retry-after") ?? undefined;
       await sleep(jitterDelayMs(parseRetryAfterMs(retryAfter)));
       res = await doFetch();

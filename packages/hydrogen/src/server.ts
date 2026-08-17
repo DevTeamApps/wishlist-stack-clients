@@ -12,6 +12,8 @@ function createLazyWishlistStackClient(getClient: () => Promise<WishlistStackCli
       remove: (listId) => getClient().then((c) => c.lists.remove(listId)),
       duplicate: (listId, body) => getClient().then((c) => c.lists.duplicate(listId, body)),
       addItems: (listId, body) => getClient().then((c) => c.lists.addItems(listId, body)),
+      containsVariants: (listId, body) =>
+        getClient().then((c) => c.lists.containsVariants(listId, body)),
       addItemsBatched: (listId, body, opts) =>
         getClient().then((c) => c.lists.addItemsBatched(listId, body, opts)),
       updateItem: (listId, itemId, body) => getClient().then((c) => c.lists.updateItem(listId, itemId, body)),
@@ -112,4 +114,3 @@ export function createWishlistStackServerContext(options: WishlistStackHydrogenO
     return { wishlistStack: server, wishlistStackClient };
   };
 }
-

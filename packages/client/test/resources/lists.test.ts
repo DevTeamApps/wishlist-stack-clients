@@ -89,7 +89,15 @@ describe("lists resource", () => {
             createdAt: "2026-01-01T00:00:00.000Z",
             updatedAt: "2026-01-01T00:00:00.000Z",
             items: [{ id: "i1", quantity: 1, position: 1, product: {}, createdAt: "", updatedAt: "" }],
-            pagination: { page: 1, pageSize: 25, totalCount: 2, totalPages: 1 },
+            pagination: {
+              page: 1,
+              pageSize: 25,
+              totalItems: 2,
+              totalCount: 2,
+              totalPages: 1,
+              hasNextPage: false,
+              hasPreviousPage: false,
+            },
           }),
           { status: 200, headers: { "content-type": "application/json" } },
         ),
@@ -131,6 +139,92 @@ describe("lists resource", () => {
     expect(isAddItemsDeltaResponse(res)).toBe(true);
     expect(res.addedCount).toBe(1);
     expect(res.listId).toBe("l_1");
+  });
+
+  it("checks variant membership without fetching list pages", async () => {
+    const mock = createMockFetch();
+    mock.setResponder(
+      () =>
+        new Response(
+          JSON.stringify({
+            listId: "l_1",
+            present: {
+              "123": true,
+              "gid://shopify/ProductVariant/456": false,
+            },
+            matches: {
+              "123": [
+                {
+                  id: "i1",
+                  variantId: "123",
+                  quantity: 2,
+                  position: 4,
+                  note: null,
+                  properties: { color: "blue" },
+                },
+              ],
+              "gid://shopify/ProductVariant/456": [],
+            },
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        ),
+    );
+    const client = createWishlistStackClient({
+      baseUrl: "https://example.test",
+      apiKey: "k",
+      customerAccessToken: "t",
+      fetch: mock.fetch,
+    });
+
+    const body = {
+      variantIds: ["123", "gid://shopify/ProductVariant/456"],
+    };
+    const res = await client.lists.containsVariants("list/one", body);
+
+    const call = mock.lastCall()!;
+    expect(String(call.input)).toBe("https://example.test/api/lists/list%2Fone/contains");
+    expect(call.init?.method).toBe("POST");
+    expect(call.init?.body).toBe(JSON.stringify(body));
+    expect(res.present["123"]).toBe(true);
+    expect(res.present["gid://shopify/ProductVariant/456"]).toBe(false);
+    expect(res.matches["123"][0]).toMatchObject({ id: "i1", quantity: 2 });
+  });
+
+  it("treats membership checks as retry-safe reads", async () => {
+    const mock = createMockFetch();
+    let hits = 0;
+    mock.setResponder(() => {
+      hits += 1;
+      return new Response(
+        JSON.stringify(
+          hits === 1
+            ? { errors: [{ message: "rate" }] }
+            : {
+                listId: "l_1",
+                present: { "123": true },
+                matches: { "123": [] },
+              },
+        ),
+        {
+          status: hits === 1 ? 429 : 200,
+          headers: { "content-type": "application/json", "retry-after": "0" },
+        },
+      );
+    });
+    const client = createWishlistStackClient({
+      baseUrl: "https://example.test",
+      apiKey: "k",
+      customerAccessToken: "t",
+      retryOnRateLimit: true,
+      fetch: mock.fetch,
+    });
+
+    const response = await client.lists.containsVariants("l_1", {
+      variantIds: ["123"],
+    });
+
+    expect(response.present["123"]).toBe(true);
+    expect(mock.calls).toHaveLength(2);
   });
 
   it("addItemsBatched splits 30 items into 25+5 POSTs and merges responses", async () => {
@@ -175,6 +269,21 @@ describe("lists resource", () => {
     expect(res.addedItems).toHaveLength(30);
   });
 
+  it("rejects an empty addItemsBatched call without making a request", async () => {
+    const mock = createMockFetch();
+    const client = createWishlistStackClient({
+      baseUrl: "https://example.test",
+      apiKey: "k",
+      customerAccessToken: "t",
+      fetch: mock.fetch,
+    });
+
+    await expect(
+      client.lists.addItemsBatched("l_1", { items: [] }),
+    ).rejects.toThrow("requires at least one item");
+    expect(mock.calls).toHaveLength(0);
+  });
+
   it("getByIdAllItems follows pagination across two pages", async () => {
     const mock = createMockFetch();
     mock.setResponder((call) => {
@@ -195,7 +304,15 @@ describe("lists resource", () => {
           createdAt: "",
           updatedAt: "",
           items,
-          pagination: { page, pageSize: 1, totalCount: 2, totalPages: 2 },
+          pagination: {
+            page,
+            pageSize: 1,
+            totalItems: 2,
+            totalCount: 2,
+            totalPages: 2,
+            hasNextPage: page < 2,
+            hasPreviousPage: page > 1,
+          },
         }),
         { status: 200, headers: { "content-type": "application/json" } },
       );

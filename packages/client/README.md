@@ -37,6 +37,7 @@ TypeScript/JavaScript SDK for the Wishlist Stack API.
 - **Built-in error handling** — Structured `WishlistStackApiError` with status codes, `Retry-After` / rate-limit headers, and API error messages
 - **Pagination support** — List endpoints support `page` and `pageSize` (max **25**); helpers fetch all pages when needed
 - **Batch helpers** — `lists.addItemsBatched` chunks adds to the max of 25 items per request
+- **Fast membership checks** — `lists.containsVariants` checks up to 100 variants without hydrating a list
 - **Sort support** — Collection endpoints accept `sortBy` (`position` | `createdAt` | `updatedAt`) and `sortDirection` (`asc` | `desc`)
 
 ## Requirements
@@ -68,7 +69,7 @@ const client = createWishlistStackClient({
   customerAccessToken: 'customer-access-token', // required for authenticated endpoints
   // optional:
   // defaultTimeoutMs: 10_000,
-  // retryOnRateLimit: true, // single retry with jitter on HTTP 429
+  // retryOnRateLimit: true, // safe reads retry once on HTTP 429
 });
 
 // Fetch all groups
@@ -80,12 +81,16 @@ const { lists } = await client.lists.getAll();
 
 ### Pagination, batching, and add responses
 
-The API paginates list detail (max `pageSize` **25**) and returns an add **delta** (`{ listId, addedItems, addedCount }`).
+The API paginates list detail when `pageSize` is supplied (max **25**) and
+always includes an add **delta** (`{ listId, addedItems, addedCount }`). Backend
+compatibility mode may additionally return the full list from add and returns
+all list items when `pageSize` is omitted; the SDK ignores those additive fields.
 
 | Concern | Guidance |
 |---------|----------|
 | List detail | Prefer `page` / `pageSize` ≤ 25, or `lists.getByIdAllItems` for every item |
 | Adding many items | Use `lists.addItemsBatched` (chunks of ≤ 25) |
+| Checking membership | Use `lists.containsVariants` for up to 100 variant IDs |
 | Add response | `{ listId, addedItems, addedCount }` |
 | Create + items | Do not send `variantIds` on create; create the list, then `addItems` |
 | `quantity` on add | Supported **1–999** |
@@ -213,7 +218,7 @@ Groups endpoints may return **503** with message `Groups API disabled for this m
 
 ## Pagination
 
-Endpoints that return lists support pagination via query parameters. Keep `pageSize` in **1–25** (use `clampPageSize()`). Prefer `lists.getByIdAllItems()` when you need every item.
+Endpoints that return lists support pagination via query parameters. Keep `pageSize` in **1–25** (use `clampPageSize()`). Prefer `lists.getByIdAllItems()` when you need every item; it always supplies `pageSize`, so it behaves consistently in strict and compatibility backend modes.
 
 ```ts
 import { clampPageSize } from '@sdg.la/wishlist-stack-sdk';
@@ -237,7 +242,7 @@ await client.lists.getById('list-id', {
 await client.lists.getByIdAllItems('list-id', { pageSize: 25 });
 ```
 
-**Pagination response structure:**
+**Collection pagination response:**
 
 ```ts
 {
@@ -247,6 +252,9 @@ await client.lists.getByIdAllItems('list-id', { pageSize: 25 });
   totalPages: number;
 }
 ```
+
+List detail uses `ListDetailPagination`, which exposes `totalItems`, the
+`totalCount` compatibility alias, and next/previous-page flags.
 
 ## Sorting
 
@@ -722,13 +730,13 @@ const { lists, pagination } = await client.lists.getAll({ page: 1, pageSize: 10,
 
 #### `lists.getById(listId, query?)`
 
-Fetch a single list by ID. Items are hydrated with Shopify product data and paginated. The response includes `pagination` (max `pageSize` **25**).
+Fetch a single list by ID. Items are hydrated with Shopify product data. Pass pagination options for consistent paging across strict and compatibility backend modes (max `pageSize` **25**).
 
 - **Endpoint:** `GET /api/lists/{listId}`
 - **Parameters:**
   - `listId` — `string`
   - `query?` — `{ page?: number; pageSize?: number; sortBy?: 'position' | 'createdAt' | 'updatedAt'; sortDirection?: 'asc' | 'desc' }`
-- **Returns:** `Promise<GetListResponse>` (`ListDetail & { pagination: Pagination }`)
+- **Returns:** `Promise<GetListResponse>` (`ListDetail & { pagination: ListDetailPagination }`)
 
 ```ts
 const list = await client.lists.getById('list-id', { page: 1, pageSize: 25, sortBy: 'updatedAt', sortDirection: 'desc' });
@@ -807,12 +815,33 @@ const full = await client.lists.getByIdAllItems('list-id', { pageSize: 25 });
 
 ---
 
+#### `lists.containsVariants(listId, body)`
+
+Check whether up to **100** Shopify product variants are present without product hydration or paging through the list. Numeric IDs and ProductVariant GIDs are accepted; response keys preserve the supplied IDs. `matches` contains lightweight item records for property-aware duplicate and move flows.
+
+- **Endpoint:** `POST /api/lists/{listId}/contains`
+- **Parameters:** `body` — `{ variantIds: string[] }`
+- **Returns:** `Promise<ContainsVariantsResponse>`
+
+```ts
+const { present, matches } = await client.lists.containsVariants('list-id', {
+  variantIds: ['46932429275374', 'gid://shopify/ProductVariant/46932429275375'],
+});
+
+if (present['46932429275374']) {
+  const existingItems = matches['46932429275374'];
+  // Each match includes id, quantity, position, note, and properties.
+}
+```
+
+---
+
 #### `lists.create(body)`
 
 Create a new list, optionally assigned to a group. Do **not** send `variantIds` on create (the API rejects them). Create the list, then call `addItems` / `addItemsBatched`.
 
 - **Endpoint:** `POST /api/lists`
-- **Parameters:** `body` — `{ name?: string; description?: string; groupId?: string }`
+- **Parameters:** `body` — `{ name: string; description?: string; groupId?: string }`
 - **Returns:** `Promise<CreateListResponse>`
 
 ```ts
@@ -951,8 +980,8 @@ Add one or more items to a list. Prefer `lists.addItemsBatched` when sending mor
 
 ```ts
 type AddItemsToListBody = {
-  items?: Array<{
-    variantId?: string;
+  items: Array<{
+    variantId: string;
     /** Quantity 1–999. */
     quantity?: number;
     note?: string;
@@ -1259,6 +1288,8 @@ import type {
   AddItemsToListBody,
   AddItemsToListResponse,
   AddItemsToListDeltaResponse,
+  ContainsVariantsBody,
+  ContainsVariantsResponse,
   UpdateListItemBody,
   ReorderListItemsBody,
   ReorderListItemsResponse,
@@ -1279,6 +1310,7 @@ import type {
 
   // Common
   Pagination,
+  ListDetailPagination,
   PaginationParams,
   OkResponse,
   Image,
@@ -1299,6 +1331,23 @@ type Pagination = {
   pageSize: number;
   totalCount: number;
   totalPages: number;
+};
+```
+
+</details>
+
+<details>
+<summary><code>ListDetailPagination</code></summary>
+
+```ts
+type ListDetailPagination = {
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalCount: number; // compatibility alias for totalItems
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
 };
 ```
 

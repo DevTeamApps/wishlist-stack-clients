@@ -1,8 +1,8 @@
 // NOTE: Most endpoints in the current OpenAPI spec do not define response schemas.
 // These named aliases are intentionally stable so you can refine them over time.
 
-import type { FeaturedItem, Image, OkResponse, Pagination } from "./common";
-export type { FeaturedItem, Image, OkResponse, Pagination } from "./common";
+import type { FeaturedItem, Image, ListDetailPagination, OkResponse, Pagination } from "./common";
+export type { FeaturedItem, Image, ListDetailPagination, OkResponse, Pagination } from "./common";
 
 export type Money = {
   amount: string;
@@ -82,7 +82,7 @@ export type GetListsResponse = {
 
 /** GET `/api/lists/:listId` — items are paginated (max pageSize 25). */
 export type GetListResponse = ListDetail & {
-  pagination: Pagination;
+  pagination: ListDetailPagination;
 };
 
 export type ListMutationResponse = Omit<ListSummary, "featuredProducts">;
@@ -99,6 +99,22 @@ export type AddItemsToListResponse = {
   addedCount: number;
 };
 
+/** POST `/api/lists/:listId/contains` */
+export type VariantMembershipMatch = {
+  id: string;
+  variantId: string;
+  quantity: number;
+  position: number;
+  note: string | null;
+  properties: Record<string, unknown> | null;
+};
+
+export type ContainsVariantsResponse = {
+  listId: string;
+  present: Record<string, boolean>;
+  matches: Record<string, VariantMembershipMatch[]>;
+};
+
 /** @deprecated Use `AddItemsToListResponse`. */
 export type AddItemsToListDeltaResponse = AddItemsToListResponse;
 
@@ -109,4 +125,3 @@ export type ReorderListItemsResponse = {
 };
 export type MarkListSharedResponse = ListMutationResponse;
 export type RevokeListSharedResponse = ListMutationResponse;
-

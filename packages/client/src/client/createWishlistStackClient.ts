@@ -11,7 +11,7 @@ export type CreateWishlistStackClientOptions = {
   fetch?: FetchLike;
   /** Default request timeout in ms when a call does not pass `timeoutMs`. */
   defaultTimeoutMs?: number;
-  /** When true, retry once on HTTP 429 with jittered backoff (default: false). */
+  /** When true, retry safe reads once on HTTP 429 (default: false). */
   retryOnRateLimit?: boolean;
 };
 

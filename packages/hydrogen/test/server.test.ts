@@ -68,6 +68,38 @@ describe("createWishlistStackServerContext", () => {
     expect(url).toBe("https://example.test/api/groups");
   });
 
+  it("proxies list membership checks through the lazy client", async () => {
+    const fetchMock = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) => {
+      return new Response(
+        JSON.stringify({ listId: "l_1", present: { "123": true } }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      );
+    });
+    globalThis.fetch = fetchMock;
+    const context = {
+      customerAccount: {
+        async getAccessToken() {
+          return "token_123";
+        },
+      },
+    };
+
+    createWishlistStackServerContext({
+      apiKey: "merchant_key",
+      baseUrl: "https://example.test",
+    })(context);
+
+    const result = await (context as any).wishlistStackClient.lists.containsVariants("l_1", {
+      variantIds: ["123"],
+    });
+
+    expect(result.present["123"]).toBe(true);
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe("https://example.test/api/lists/l_1/contains");
+    expect(init.method).toBe("POST");
+    expect(init.body).toBe(JSON.stringify({ variantIds: ["123"] }));
+  });
+
   it("bootstrapClientConfig does not expose token by default", async () => {
     const context = {
       customerAccount: {
