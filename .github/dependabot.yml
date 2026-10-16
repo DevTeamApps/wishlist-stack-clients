@@ -1,0 +1,15 @@
+version: 2
+updates:
+  # Security updates always target the repository's default branch (main).
+  # CI separately audits main on a daily schedule.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: daily
+    # Keep security PRs enabled without opening routine version-update PRs.
+    open-pull-requests-limit: 0
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 0

@@ -1,0 +1,54 @@
+name: Dependency security
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  schedule:
+    # Scheduled workflows run from the default branch; explicitly audit main.
+    - cron: '23 15 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dependency-audit-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    name: npm audit (${{ matrix.branch }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        branch: ${{ fromJSON((github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && '["main"]' || '["event"]') }}
+    steps:
+      - name: Check out audited revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ matrix.branch == 'event' && github.ref || format('refs/heads/{0}', matrix.branch) }}
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+
+      - name: Test security gate behavior
+        run: node --test .github/scripts/audit-dependencies.test.cjs
+
+      - name: Audit locked dependencies
+        run: node .github/scripts/audit-dependencies.cjs
+
+      - name: Preserve audit reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: dependency-audit-${{ matrix.branch }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: dependency-audit/*.json
+          if-no-files-found: error
+          retention-days: 14
