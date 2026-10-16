@@ -40,8 +40,8 @@ function audit({ run = spawnSync, outputDirectory = 'dependency-audit', summaryF
   ];
   let failed = false;
   for (const [scope, extra] of [['production', ['--omit=dev']], ['all', []]]) {
-    const result = run('npm', ['audit', '--package-lock-only', '--ignore-scripts', '--json', ...extra], {
-      encoding: 'utf8', timeout: 120_000, maxBuffer: 32 * 1024 * 1024,
+    const result = run('npm', ['audit', '--package-lock-only', '--ignore-scripts', '--audit-level=info', '--json', ...extra], {
+      encoding: 'utf8', timeout: 300_000, killSignal: 'SIGKILL', maxBuffer: 32 * 1024 * 1024,
     });
     fs.writeFileSync(path.join(outputDirectory, `${scope}.json`), result.stdout || '{}');
     try {
