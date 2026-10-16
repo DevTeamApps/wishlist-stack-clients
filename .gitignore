@@ -16,3 +16,6 @@ tsconfig.vitest-temp.json
 # Editor files
 .vscode
 .cursor
+
+# Local dependency security reports
+/dependency-audit/
