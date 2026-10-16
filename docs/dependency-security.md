@@ -16,9 +16,11 @@ The separate `Dependency security` workflow runs on PRs and pushes targeting mai
 
 Each audit runs npm against the committed lockfile twice: production dependencies and all dependencies including development/build tooling. It does not install packages or run lifecycle scripts. Counts appear in the Actions summary, and raw JSON reports are retained as workflow artifacts for 14 days.
 
-High/critical findings in either scope fail the check. Moderate/low findings remain visible. Registry failures, invalid output, and timeouts also fail rather than appearing clean. Existing dependency debt can make the first runs red; this monitoring change does not upgrade the application dependencies.
+Critical findings in either scope fail the check. High findings emit GitHub Actions warning annotations and show `WARN` in the summary without failing the job. Moderate/low findings remain visible. Registry failures, invalid output, and timeouts still fail rather than appearing clean. Each audited branch supplies its own script, so policy changes take effect when merged into that branch.
 
-The workflow uses read-only repository permissions, does not retain checkout credentials, and pins its actions to release commit hashes. Existing build/typecheck/test workflows remain separate. A failing audit blocks merging only after an administrator makes the audit check required in branch protection/rulesets; it does not independently stop an external deployment.
+For pull requests from this repository, a single bot comment shows the counts, warning/failure status, and high/critical advisory roots directly in the PR conversation. Subsequent runs update that comment, including when findings clear or a scan fails. The comment identifies the audited commit and links to the full reports. Fork PRs retain the read-only audit and Actions summary; their tokens cannot post comments. The separate comment job has pull-request write permission and never checks out or executes PR code.
+
+The audit job uses read-only repository permissions, does not retain checkout credentials, and pins its actions to release commit hashes. Existing build/typecheck/test workflows remain separate. A failing audit blocks merging only after an administrator makes the audit check required in branch protection/rulesets; it does not independently stop an external deployment.
 
 ## Alert delivery and response
 
