@@ -8,6 +8,8 @@ This repo contains:
 - Core SDK docs: [`packages/client/`](./packages/client/)
 - Hydrogen docs: [`packages/hydrogen/README.md`](./packages/hydrogen/README.md)
 
+For contribution and internal-maintainer guidance, see [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Local development
 
 ```bash
