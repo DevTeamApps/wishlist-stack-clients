@@ -10,6 +10,12 @@ This document outlines the development workflow, release process, and code stand
 - [Release Process](#release-process)
 - [Code Standards](#code-standards)
 
+## Internal integration and release work
+
+Authorized maintainers should also read the [private Wishlist Stack development handbook](https://github.com/DevTeamApps/wishlist-stack/blob/main/DEVELOPMENT.md) before internal integration tests, app changes or releases. It contains the shared environment checks, test setup, troubleshooting and review/release procedure. Access to this public repository does not grant access to that private repository; ask a maintainer if your internal task requires it.
+
+Public contributors can use the self-contained development instructions below. Do not copy private operational details, customer data, credentials or internal test artifacts into this repository, its issues or its pull requests.
+
 ## Development Setup
 
 ### Prerequisites
