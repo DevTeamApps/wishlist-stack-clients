@@ -8,6 +8,7 @@
   ],
   "scripts": {
     "build": "npm -w @sdg.la/wishlist-stack-sdk run build && npm -w @sdg.la/wishlist-stack-hydrogen run build",
+    "version-packages": "node .github/scripts/version-packages.mjs",
     "dev": "npm -ws run dev",
     "test": "vitest run",
     "test:watch": "vitest",

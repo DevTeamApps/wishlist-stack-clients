@@ -56,12 +56,12 @@ jobs:
 
       - name: Create Release Pull Request or Publish
         id: changesets
-        uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1
+        uses: changesets/action@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2, Changesets CLI 3 output
         with:
-          version: npm exec --no --ignore-scripts -- changeset version
-          publish: npm exec --no --ignore-scripts -- changeset publish
-          title: "Version Packages"
-          commit: "chore: version packages"
+          version-script: npm run version-packages
+          publish-script: npm exec --no --ignore-scripts -- changeset publish
+          pr-title: "Version Packages"
+          commit-message: "chore: version packages"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ''  # Empty string forces OIDC authentication
@@ -71,7 +71,7 @@ jobs:
         uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
           script: |
-            const publishedPackages = ${{ steps.changesets.outputs.publishedPackages }};
+            const publishedPackages = ${{ steps.changesets.outputs['published-packages'] }};
             
             if (publishedPackages && publishedPackages.length > 0) {
               // Use the first package's version for the release tag (they're all the same with fixed versioning)
