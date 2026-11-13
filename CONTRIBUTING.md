@@ -166,7 +166,11 @@ npm exec --no --ignore-scripts -- changeset --empty
 
 ## Release Process
 
-Releases are managed through a bot-created "Version Packages" PR.
+Releases are managed through a bot-created "Version Packages" PR. GitHub Actions
+publishes using npm trusted publishing (OIDC), with no long-lived npm token.
+The Changesets action reads the CLI's structured release output to create tags
+and GitHub release records. Versioning also synchronizes `package-lock.json`,
+with dependency install scripts blocked, so the release PR is usable by `npm ci`.
 
 ### How It Works
 
