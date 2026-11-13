@@ -10,6 +10,12 @@ It also provides:
 - **Context helpers** (`getWishlistStackClient`, `getWishlistStack`) to avoid `context.get(...)` boilerplate
 - **React Provider + hooks** for client-side usage (`@sdg.la/wishlist-stack-hydrogen/react`)
 
+Headless integrations use the direct API at `https://app.wishliststack.com`.
+From version 0.16.0 this is the default when `baseUrl` is omitted; explicit values
+are preserved. Shopify Online Store themes should normally use the installed
+same-origin app proxy with the [core SDK](../client/), rather than assuming that
+proxy is available on a headless domain.
+
 ## Install
 
 ```bash
@@ -44,12 +50,17 @@ const {nonce, header, NonceProvider} = createContentSecurityPolicy({
     checkoutDomain: context.env.PUBLIC_CHECKOUT_DOMAIN,
     storeDomain: context.env.PUBLIC_STORE_DOMAIN,
   },
-  connectSrc: ['https://wishlist.devteam.run'],
+  connectSrc: ['https://app.wishliststack.com'],
 });
 ```
 
 Without this, client-side API calls will be silently blocked by the browser's
 Content Security Policy. If you use a custom `baseUrl`, add that domain instead.
+
+When upgrading from a version whose default used the compatibility hostname,
+allow the new origin before releasing browser bundles. Keep the old origin in
+`connectSrc` while older bundles are cached, or retain an explicit `baseUrl`
+during the transition. Server-side calls do not use the browser CSP.
 
 ## API limits and storefront guidance
 
@@ -63,6 +74,8 @@ Content Security Policy. If you use a custom `baseUrl`, add that domain instead.
    may include the full list as additional fields.
 6. Re-exported helpers: `clampPageSize`, `isAddItemsDeltaResponse`
    from `@sdg.la/wishlist-stack-hydrogen`.
+7. Prefer explicit `pageSize: 20` and follow pagination metadata when rendering
+   wishlists. Existing 25-item pages and the SDK default remain supported.
 
 ## 1) Server usage (attach to Hydrogen load context)
 
@@ -99,7 +112,7 @@ return hydrogenContext;
 | Option | Type | Required | Description |
 |--------|------|----------|-------------|
 | `apiKey` | `string` | Yes | Your merchant API key |
-| `baseUrl` | `string` | No | API base URL (defaults to production) |
+| `baseUrl` | `string` | No | Direct API base URL (defaults to `https://app.wishliststack.com` from 0.16.0) |
 | `getCustomerAccessToken` | `(context: unknown) => Promise<string \| undefined> \| string \| undefined` | No | Override how the customer access token is resolved. If omitted, the library calls `context.customerAccount.getAccessToken()` automatically. |
 
 Example with explicit token resolution:
