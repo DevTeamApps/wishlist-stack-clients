@@ -1,5 +1,11 @@
 # @sdg.la/wishlist-stack-sdk
 
+## 0.16.0
+
+### Minor Changes
+
+- [#37](https://github.com/DevTeamApps/wishlist-stack-clients/pull/37) [`61837f2`](https://github.com/DevTeamApps/wishlist-stack-clients/commit/61837f21b38a57d486d4ece5e15a88f656d93362) Thanks [@ArielSpiegel](https://github.com/ArielSpiegel)! - Use `https://app.wishliststack.com` as the default direct API origin. Explicit `baseUrl` values, request authentication, API payloads and pagination sizes up to 25 are unchanged. When upgrading a browser integration that uses the default, allow the new origin in CSP `connect-src`, or retain its existing explicit `baseUrl`. Shopify Online Store themes should use their installed same-origin app proxy; headless integrations can use the canonical direct origin.
+
 ## 0.15.0
 
 ### Minor Changes
