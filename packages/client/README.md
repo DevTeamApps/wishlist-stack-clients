@@ -11,6 +11,8 @@ TypeScript/JavaScript SDK for the Wishlist Stack API.
 - [Requirements](#requirements)
 - [Installation](#installation)
 - [Quick Start](#quick-start)
+- [Choose a transport](#choose-a-transport)
+- [Upgrading the default origin](#upgrading-the-default-origin)
 - [Usage](#usage)
   - [Server / Node.js / Workers](#server--nodejs--workers)
   - [Browser](#browser)
@@ -79,6 +81,52 @@ const { groups } = await client.groups.getAll();
 const { lists } = await client.lists.getAll();
 ```
 
+## Choose a transport
+
+For **Shopify Online Store themes**, we recommend the installed, same-origin app
+proxy. Use its configured prefix (normally `/apps/wishlist-stack`) as `baseUrl`.
+Do not append `/api`; the SDK adds each endpoint path. Keep same-origin cookies
+so Shopify can sign the logged-in shopper identity. A customer access token is
+not required for private calls made through that signed proxy; a shopper must
+still be signed in. Public shared reads also work for signed-out visitors.
+
+```ts
+const client = createWishlistStackClient({
+  apiKey: 'YOUR_MERCHANT_API_KEY',
+  baseUrl: '/apps/wishlist-stack',
+  fetch: (input, init) => window.fetch(input, {
+    ...init,
+    credentials: 'same-origin',
+  }),
+});
+
+const firstPage = await client.lists.getById('list-id', {page: 1, pageSize: 20});
+```
+
+For **headless storefronts and server integrations**, use
+`https://app.wishliststack.com` and the documented merchant key/customer token
+authentication. Do not assume an Online Store app proxy exists on a headless
+hostname. Direct and proxy transports expose the same `/api/*` methods and
+payloads; authentication is specific to each transport.
+
+Prefer explicit 20-item pages for storefront rendering and follow pagination
+metadata. Existing page sizes up to **25**, including the SDK's default, remain
+supported. Use all-page helpers only when the operation needs every item.
+
+## Upgrading the default origin
+
+Starting with **0.16.0**, omitting `baseUrl` uses
+`https://app.wishliststack.com`. Earlier package versions keep their original
+default. An explicitly configured `baseUrl` is always preserved, including an
+existing compatibility hostname or a same-origin proxy path.
+
+Before upgrading a direct browser integration that uses the default, allow
+`https://app.wishliststack.com` in CSP `connect-src`. Keep the previous origin
+allowed while older bundles are still cached. Alternatively, keep your current
+explicit `baseUrl` during a staged upgrade. This release does not change method
+names, authentication headers, payloads or pagination limits, and does not
+automatically switch an existing integration to the proxy.
+
 ### Pagination, batching, and add responses
 
 The API paginates list detail when `pageSize` is supplied (max **25**) and
@@ -130,7 +178,7 @@ import { createWishlistStackClient } from '@sdg.la/wishlist-stack-sdk';
 
 const client = createWishlistStackClient({
   apiKey: 'YOUR_API_KEY',
-  baseUrl: 'https://wishlist.devteam.run', // optional default
+  baseUrl: 'https://app.wishliststack.com', // optional direct API default
   customerAccessToken: '...optional...',
 });
 
@@ -145,10 +193,11 @@ You can load the SDK in plain HTML without a bundler by using a `<script type="m
 
 ```html
 <script type="module">
-  import { createWishlistStackClient } from "https://cdn.jsdelivr.net/npm/@sdg.la/wishlist-stack-sdk@0.10.1/+esm";
+  import { createWishlistStackClient } from "https://cdn.jsdelivr.net/npm/@sdg.la/wishlist-stack-sdk@0.15.0/+esm";
 
   window.wishlistClient = createWishlistStackClient({
     apiKey: "YOUR_MERCHANT_API_KEY",
+    baseUrl: "https://app.wishliststack.com", // explicit for this pinned version
     customerAccessToken: "...",
   });
 
@@ -164,7 +213,11 @@ Pin the version in the CDN URL (as shown above) so updates do not break your int
 
 ### Shopify Liquid authentication
 
-Authenticated SDK calls require a customer access token. For Liquid themes, obtain one via Shopify's Customer Account API OAuth flow in the browser.
+Direct authenticated SDK calls require a customer access token. The recommended
+same-origin app proxy uses Shopify's signed shopper identity instead (see
+[Choose a transport](#choose-a-transport)). If a Liquid integration intentionally
+uses the direct API, obtain a token through Shopify's Customer Account API OAuth
+flow in the browser.
 
 See [AUTH_EXAMPLE.md](./AUTH_EXAMPLE.md) for an example-only reference implementation adapted from Shopify's docs.
 
@@ -278,7 +331,7 @@ await client.shared.getSharedList('list-id', { sortBy: 'createdAt', sortDirectio
 
 ### Groups
 
-> [View full Groups API reference](https://wishlist.devteam.run/docs#/groups)
+> [View full Groups API reference](https://app.wishliststack.com/docs#/groups)
 
 ---
 
@@ -671,7 +724,7 @@ await client.groups.unshare('group-id');
 
 ### Lists
 
-> [View full Lists API reference](https://wishlist.devteam.run/docs#/lists)
+> [View full Lists API reference](https://app.wishliststack.com/docs#/lists)
 
 ---
 
@@ -1209,7 +1262,7 @@ await client.lists.unshare('list-id');
 
 Public read-only endpoints for accessing shared lists and groups. These require only the merchant `apiKey` — no customer access token needed.
 
-> [View full Shared API reference](https://wishlist.devteam.run/docs#/shared)
+> [View full Shared API reference](https://app.wishliststack.com/docs#/shared)
 
 ---
 
