@@ -13,7 +13,8 @@ For contribution and internal-maintainer guidance, see [CONTRIBUTING.md](CONTRIB
 ## Local development
 
 ```bash
-npm install
+npm config get ignore-scripts # must print true
+npm install --ignore-scripts
 npm run build
 npm test
 ```

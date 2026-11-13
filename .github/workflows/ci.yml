@@ -10,6 +10,12 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
+env:
+  NPM_CONFIG_IGNORE_SCRIPTS: "true"
+
 jobs:
   validate:
     name: Validate
@@ -17,16 +23,21 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: "24"
+          node-version: "24.22.3"
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          npm config get ignore-scripts
+          test "$(npm config get ignore-scripts)" = true
+          npm ci --ignore-scripts
 
       - name: Build
         run: npm run build

@@ -35,8 +35,13 @@ Public contributors can use the self-contained development instructions below. D
 2. Install dependencies:
 
    ```bash
-   npm install
+   npm config get ignore-scripts # must print true
+   npm install --ignore-scripts
    ```
+
+   Keep `ignore-scripts=true` in your user-level `~/.npmrc`. If the check prints
+   anything else, stop and resolve the overriding configuration. Do not manually
+   run skipped dependency install scripts without maintainer approval.
 
 3. Build all packages:
 
@@ -111,7 +116,7 @@ A changeset is a small markdown file that describes:
 After making your code changes, run:
 
 ```bash
-npx changeset
+npm exec --no --ignore-scripts -- changeset
 ```
 
 You'll be prompted to:
@@ -142,7 +147,7 @@ Fixed edge case in query builder when filters are empty
 
 ### What If I Forget to Add a Changeset?
 
-CI will remind you if your PR changes code but has no changeset. Simply run `npx changeset` and push the new file.
+CI will remind you if your PR changes code but has no changeset. Run `npm exec --no --ignore-scripts -- changeset` after installing dependencies, then push the new file.
 
 ### Changes That Don't Need Changesets
 
@@ -156,7 +161,7 @@ Some changes don't need changesets:
 For these, you can create an empty changeset:
 
 ```bash
-npx changeset --empty
+npm exec --no --ignore-scripts -- changeset --empty
 ```
 
 ## Release Process
