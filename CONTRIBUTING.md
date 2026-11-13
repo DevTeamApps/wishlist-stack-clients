@@ -10,6 +10,12 @@ This document outlines the development workflow, release process, and code stand
 - [Release Process](#release-process)
 - [Code Standards](#code-standards)
 
+## Internal integration and release work
+
+Authorized maintainers should also read the [private Wishlist Stack development handbook](https://github.com/DevTeamApps/wishlist-stack/blob/main/DEVELOPMENT.md) before internal integration tests, app changes or releases. It contains the shared environment checks, test setup, troubleshooting and review/release procedure. Access to this public repository does not grant access to that private repository; ask a maintainer if your internal task requires it.
+
+Public contributors can use the self-contained development instructions below. Do not copy private operational details, customer data, credentials or internal test artifacts into this repository, its issues or its pull requests.
+
 ## Development Setup
 
 ### Prerequisites
@@ -29,8 +35,13 @@ This document outlines the development workflow, release process, and code stand
 2. Install dependencies:
 
    ```bash
-   npm install
+   npm config get ignore-scripts # must print true
+   npm install --ignore-scripts
    ```
+
+   Keep `ignore-scripts=true` in your user-level `~/.npmrc`. If the check prints
+   anything else, stop and resolve the overriding configuration. Do not manually
+   run skipped dependency install scripts without maintainer approval.
 
 3. Build all packages:
 
@@ -105,7 +116,7 @@ A changeset is a small markdown file that describes:
 After making your code changes, run:
 
 ```bash
-npx changeset
+npm exec --no --ignore-scripts -- changeset
 ```
 
 You'll be prompted to:
@@ -136,7 +147,7 @@ Fixed edge case in query builder when filters are empty
 
 ### What If I Forget to Add a Changeset?
 
-CI will remind you if your PR changes code but has no changeset. Simply run `npx changeset` and push the new file.
+CI will remind you if your PR changes code but has no changeset. Run `npm exec --no --ignore-scripts -- changeset` after installing dependencies, then push the new file.
 
 ### Changes That Don't Need Changesets
 
@@ -150,7 +161,7 @@ Some changes don't need changesets:
 For these, you can create an empty changeset:
 
 ```bash
-npx changeset --empty
+npm exec --no --ignore-scripts -- changeset --empty
 ```
 
 ## Release Process

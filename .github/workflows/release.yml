@@ -8,6 +8,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
+env:
+  NPM_CONFIG_IGNORE_SCRIPTS: "true"
+
 jobs:
   release:
     name: Release
@@ -24,36 +27,39 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           # Fetch all history for proper versioning
           fetch-depth: 0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: "24"  # Needed for npm@11 for Trusted Publishing
+          node-version: "24.22.3" # Includes npm trusted publishing support
           registry-url: "https://registry.npmjs.org"
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          npm config get ignore-scripts
+          test "$(npm config get ignore-scripts)" = true
+          npm ci --ignore-scripts
 
       - name: Build
         run: npm run build
 
-      - name: Test OIDC Token
-        run: |
-          TOKEN=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=npm" | jq -r '.value')
-          [ -n "$TOKEN" ] && echo "✅ OIDC working" || exit 1
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
 
       - name: Create Release Pull Request or Publish
         id: changesets
-        uses: changesets/action@v1
+        uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1
         with:
-          version: npx changeset version
-          publish: npx changeset publish
+          version: npm exec --no --ignore-scripts -- changeset version
+          publish: npm exec --no --ignore-scripts -- changeset publish
           title: "Version Packages"
           commit: "chore: version packages"
         env:
@@ -62,7 +68,7 @@ jobs:
 
       - name: Create GitHub Release
         if: steps.changesets.outputs.published == 'true'
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
           script: |
             const publishedPackages = ${{ steps.changesets.outputs.publishedPackages }};

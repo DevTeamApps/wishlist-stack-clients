@@ -22,6 +22,8 @@ jobs:
     name: npm audit (${{ matrix.branch }})
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    outputs:
+      comment: ${{ steps.summary.outputs.comment }}
     strategy:
       fail-fast: false
       matrix:
@@ -44,11 +46,53 @@ jobs:
       - name: Audit locked dependencies
         run: node .github/scripts/audit-dependencies.cjs
 
+      - name: Prepare PR summary
+        if: always() && github.event_name == 'pull_request'
+        id: summary
+        run: |
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const file = 'dependency-audit/summary.md';
+          const summary = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : 'Dependency audit did not complete. Review the workflow run; this is not a clean scan.';
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `comment=${JSON.stringify(summary)}\n`);
+          NODE
+
       - name: Preserve audit reports
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: dependency-audit-${{ matrix.branch }}-${{ github.run_id }}-${{ github.run_attempt }}
-          path: dependency-audit/*.json
+          path: dependency-audit/
           if-no-files-found: error
           retention-days: 14
+
+  pr-summary:
+    name: Dependency audit PR summary
+    needs: audit
+    if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      pull-requests: write
+    steps:
+      # No checkout or PR code execution in the job with comment permissions.
+      - name: Update PR audit summary
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        env:
+          AUDIT_SUMMARY: ${{ needs.audit.outputs.comment }}
+        with:
+          script: |
+            const marker = '<!-- dependency-security-audit -->';
+            const pr = context.payload.pull_request;
+            const { data: current } = await github.rest.pulls.get({ ...context.repo, pull_number: pr.number });
+            if (current.head.sha !== pr.head.sha) return;
+            const summary = process.env.AUDIT_SUMMARY ? JSON.parse(process.env.AUDIT_SUMMARY) : 'Dependency audit did not complete. Review the workflow run; this is not a clean scan.';
+            const run = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const body = `${marker}\n${summary}\n\nCommit: \`${pr.head.sha}\` · [Full audit reports](${run})`;
+            const comments = await github.paginate(github.rest.issues.listComments, { ...context.repo, issue_number: pr.number, per_page: 100 });
+            const existing = comments.find(comment => comment.user?.login === 'github-actions[bot]' && comment.body?.startsWith(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({ ...context.repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ ...context.repo, issue_number: pr.number, body });
+            }
